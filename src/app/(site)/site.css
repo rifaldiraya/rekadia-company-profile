@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+@theme {
+  /* Webflow breakpoints: tiny <480, small <768, medium <992, main >=992 */
+  --breakpoint-*: initial;
+  --breakpoint-sm: 480px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 992px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1440px;
+
+  /* Webflow sets no per-size line-height: text inherits the body's 20px unless a rule overrides it. */
+  --text-xs--line-height: inherit;
+  --text-sm--line-height: inherit;
+  --text-base--line-height: inherit;
+  --text-lg--line-height: inherit;
+  --text-xl--line-height: inherit;
+  --text-2xl--line-height: inherit;
+
+  --font-montserrat: var(--next-font-montserrat), "Montserrat", sans-serif;
+  --font-quicksand: var(--next-font-quicksand), "Quicksand", sans-serif;
+
+  --color-brand: #25c1da;
+  --color-brand-light: #00c2dc;
+  --color-brand-dark: #006876;
+  --color-brand-pale: #c4f3ff;
+  --color-ink: #22272f;
+  --color-ink-strong: #18191b;
+  --color-nav: #1a1b1f;
+  --color-body: #667991;
+  --color-muted: #b0bac9;
+  --color-quote: #8c909e;
+  --color-surface: #f6f7f9;
+  --color-line: #d8dce8;
+  --color-line-soft: #d5dbe2;
+  --color-footer: #063646;
+  --color-whatsapp: #25d366;
+
+  --shadow-nav: 0 2px 5px #0003;
+  --shadow-form: 0 25px 40px -10px #1c273114;
+
+  --animate-fade-in: fade-in 1s linear both;
+  --animate-rise-in: rise-in 1s linear both;
+  --animate-jiggle: jiggle 0.5s ease;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes rise-in {
+    from {
+      transform: translateY(100px);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes jiggle {
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+    20% {
+      transform: rotate(-6deg);
+    }
+    40% {
+      transform: rotate(5deg);
+    }
+    60% {
+      transform: rotate(-3deg);
+    }
+    80% {
+      transform: rotate(2deg);
+    }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-white font-quicksand text-ink-strong antialiased;
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  strong {
+    font-weight: 700;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* scroll-fade-in-<n>: fades in over the first n% of page scroll; browsers without scroll timelines show it immediately. */
+@utility scroll-fade-in-* {
+  @supports (animation-timeline: scroll()) {
+    animation: fade-in linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0% calc(--value(integer) * 1%);
+  }
+}
+
+@utility btn-gradient {
+  background-image: linear-gradient(90deg, var(--color-brand-dark), var(--color-brand-light));
+}

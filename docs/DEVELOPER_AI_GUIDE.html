@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Developer AI Guide — Cursor · RKD Template</title>
+  <link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="DEVELOPER_GUIDE.html">RKD Template<span>Documentation</span></a>
+    <nav class="nav-links">
+      <a href="DEVELOPER_GUIDE.html">Developer Guide</a>
+      <a href="DEVELOPER_AI_GUIDE.html" class="active">AI Guide (Cursor)</a>
+      <a href="DEVELOPER_DEPLOYMENT_GUIDE.html">Deployment</a>
+      <a href="../README.md">README</a>
+    </nav>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#context">What Cursor should know</a></li>
+        <li><a href="#golden-rules">Golden rules</a></li>
+        <li><a href="#cursor-setup">Cursor setup</a></li>
+        <li><a href="#prompts">Prompt templates</a></li>
+        <li><a href="#patterns">Patterns to follow</a></li>
+        <li><a href="#placement">File placement</a></li>
+        <li><a href="#avoid">What to avoid</a></li>
+        <li><a href="#checklist">Review checklist</a></li>
+        <li><a href="#workflow">Session workflow</a></li>
+        <li><a href="#troubleshooting">Troubleshooting</a></li>
+        <li><a href="#links">Links</a></li>
+      </ol>
+    </aside>
+
+    <main>
+      <h1>Developer AI Guide — Coding with Cursor</h1>
+      <p class="lead">How to work effectively with <strong>Cursor Agent</strong> (and Chat) in this boilerplate so generated code matches project conventions and stays maintainable.</p>
+      <p>For first-time setup (install, env, run dev), see <a href="DEVELOPER_GUIDE.html">DEVELOPER_GUIDE.html</a>.</p>
+
+      <section id="context">
+        <h2>1. What Cursor should know about this project</h2>
+        <p>When you start a task, give the agent enough context. Prefer <strong>@-mentions</strong> of real files over vague descriptions.</p>
+        <table>
+          <thead>
+            <tr><th>Topic</th><th>Tell the AI / @-mention</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Architecture</td><td><code>README.md</code>, <code>docs/DEVELOPER_GUIDE.md</code></td></tr>
+            <tr><td>Folder layout</td><td><code>src/features/</code> (example: <code>src/features/users/</code>)</td></tr>
+            <tr><td>Routing</td><td><code>src/app/(dashboard)/</code>, <code>src/config/menu.config.tsx</code></td></tr>
+            <tr><td>API layer</td><td><code>src/utils/http-client.ts</code>, any existing <code>hook/use-*.ts</code> in the feature</td></tr>
+            <tr><td>Forms</td><td><code>src/components/core/form/</code>, <code>src/features/*/schema/</code></td></tr>
+            <tr><td>Access control</td><td><code>src/config/access-control.config.ts</code>, <code>src/components/access-controller.tsx</code></td></tr>
+            <tr><td>UI shell</td><td><code>src/components/layout/</code>, <code>src/config/theme.config.ts</code></td></tr>
+            <tr><td>Auth</td><td><code>src/middleware.ts</code>, sign-in feature under <code>src/features/sign-in/</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <hr class="section" />
+
+      <section id="golden-rules">
+        <h2>2. Golden rules for AI-generated code</h2>
+        <p>Ask Cursor to follow these every time:</p>
+        <ol>
+          <li><strong>Feature-first</strong> — Business logic lives in <code>src/features/&lt;name&gt;/</code>, not bloated route files under <code>src/app/</code>.</li>
+          <li><strong>Thin App Router pages</strong> — <code>src/app/**/page.tsx</code> only wires the route; use <code>dynamic(..., { ssr: false })</code> for heavy client pages (match existing pages).</li>
+          <li><strong>kebab-case</strong> — All new files and folders: <code>my-new-hook.ts</code>, <code>order-list-page.tsx</code>.</li>
+          <li><strong><code>@/</code> imports</strong> — Never use long relative paths like <code>../../../utils</code>.</li>
+          <li><strong>Reuse core components</strong> — Forms, datagrid, dialog, layout from <code>src/components/core/</code> and <code>src/components/layout/</code>.</li>
+          <li><strong>Minimal diff</strong> — Only change files required for the task; do not refactor unrelated modules.</li>
+          <li><strong>Match existing patterns</strong> — Copy structure from the closest feature (users, roles, access-control).</li>
+        </ol>
+      </section>
+
+      <hr class="section" />
+
+      <section id="cursor-setup">
+        <h2>3. Recommended Cursor setup</h2>
+
+        <h3>3.1 Project rules (optional but valuable)</h3>
+        <p>Create <code>.cursor/rules/</code> or a root <code>AGENTS.md</code> with your team rules, for example:</p>
+        <ul>
+          <li>Always use <code>httpClient</code> from <code>@/utils/http-client</code> (not a new axios instance)</li>
+          <li>Yup + react-hook-form for forms</li>
+          <li>TanStack Query for server state; Zustand only for UI/local feature state</li>
+          <li>No secrets in commits (<code>.env.local</code> is generated, not hand-edited for sharing)</li>
+        </ul>
+        <p>You can use Cursor’s <strong>Create Rule</strong> skill or add rules manually so every agent session inherits them.</p>
+
+        <h3>3.2 Context hygiene</h3>
+        <ul>
+          <li><strong>Open relevant files</strong> before asking (e.g. the feature you are extending).</li>
+          <li>Use <strong>@Folder</strong> on <code>src/features/&lt;feature&gt;</code> for scoped changes.</li>
+          <li>For new features, @ an existing feature folder as a template: <code>@src/features/roles</code>.</li>
+        </ul>
+
+        <h3>3.3 Agent vs Chat</h3>
+        <table>
+          <thead>
+            <tr><th>Use</th><th>When</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Agent</strong></td><td>Multi-file features, new routes, hooks, menus, access control</td></tr>
+            <tr><td><strong>Chat</strong></td><td>Explain code, review diff, single-file tweaks</td></tr>
+            <tr><td><strong>Plan mode</strong></td><td>Large refactors or unclear requirements before coding</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <hr class="section" />
+
+      <section id="prompts">
+        <h2>4. Prompt templates (copy and adapt)</h2>
+
+        <h3>4.1 New feature module</h3>
+        <div class="prompt-box">Add a new feature "&lt;FeatureName&gt;" following the same structure as @src/features/users.
+
+Requirements:
+- API: GET/POST ... (endpoints)
+- Page at route /...
+- Menu entry under secondMenuConfig with moduleName if access-controlled
+- Use httpClient, TanStack Query hooks in hook/, Yup schema for forms
+- App route: thin page with dynamic import and ssr: false
+- kebab-case file names, @/ imports only
+
+Do not change unrelated features. Reuse CoreDataGrid / core form components where applicable.</div>
+
+        <h3>4.2 New API hook only</h3>
+        <div class="prompt-box">In @src/features/&lt;feature&gt;/hook/, add use-&lt;action&gt;.ts following @src/features/roles/hook/use-get-roles.ts.
+
+- Export a named API function (getXxxApi) using httpClient from @/utils/http-client
+- useMutation or useQuery with a stable queryKey
+- Types for request/response in the same file or a small types file if large</div>
+
+        <h3>4.3 Form + validation</h3>
+        <div class="prompt-box">Add a form in @src/features/&lt;feature&gt;/components/ using react-hook-form and yupResolver.
+
+- Schema in @src/features/&lt;feature&gt;/schema/ (Yup), mirror @src/features/users/schema/
+- Fields: CoreTextField / CoreAutocomplete from @src/components/core/form
+- Submit via existing mutation hook pattern; show errors with enqueueSnackbar on failure</div>
+
+        <h3>4.4 Access-controlled UI</h3>
+        <div class="prompt-box">Restrict "&lt;button/page&gt;" to users with module "&lt;ModuleNameEnum.X&gt;" and action ActionEnum.Create.
+
+- Add enum value in @src/config/access-control.config.ts if missing
+- Wrap UI with @src/components/access-controller.tsx
+- Add moduleName to menu item in @src/config/menu.config.tsx</div>
+
+        <h3>4.5 Bug fix</h3>
+        <div class="prompt-box">Fix: &lt;describe symptom&gt;
+
+Repro: &lt;steps&gt;
+Expected: &lt;behavior&gt;
+
+Search only @src/features/&lt;feature&gt; and related app route. Explain root cause briefly, then minimal fix. Run pnpm lint on touched files.</div>
+      </section>
+
+      <hr class="section" />
+
+      <section id="patterns">
+        <h2>5. Patterns the AI must follow</h2>
+
+        <h3>5.1 REST + TanStack Query</h3>
+        <pre><code>// hook/use-get-example.ts
+import httpClient from "@/utils/http-client";
+import { useQuery } from "@tanstack/react-query";
+
+export const getExampleApi = () =&gt; httpClient.get&lt;Example[]&gt;("/example");
+
+export default function useGetExample() {
+  return useQuery({
+    queryFn: getExampleApi,
+    queryKey: ["example"],
+  });
+}</code></pre>
+        <ul>
+          <li><strong>Do not</strong> create a second axios client.</li>
+          <li><strong>Do</strong> invalidate or update <code>queryKey</code> on mutations (follow nearby features).</li>
+        </ul>
+
+        <h3>5.2 Forms</h3>
+        <pre><code>const form = useForm&lt;Schema&gt;({
+  defaultValues: { ... },
+  resolver: yupResolver(schema),
+});</code></pre>
+        <ul>
+          <li>Schemas in <code>schema/</code> with Yup.</li>
+          <li>UI from <code>src/components/core/form/</code>.</li>
+        </ul>
+
+        <h3>5.3 Zustand</h3>
+        <p>Use only for <strong>UI state</strong> (modals open, selected row, etc.) under <code>store/</code>, not for server data already in React Query.</p>
+
+        <h3>5.4 Data grid</h3>
+        <p>Prefer existing abstractions:</p>
+        <ul>
+          <li><code>CoreDataGrid</code> — <code>src/components/core/core-datagrid/</code></li>
+          <li><code>useCoreDataGrid</code> / <code>withCoreDataGrid</code> for list pages</li>
+        </ul>
+        <p>Point Cursor at <code>src/features/roles/components/roles-grid.tsx</code> as a reference.</p>
+
+        <h3>5.5 Notifications &amp; dialogs</h3>
+        <pre><code>import { enqueueSnackbar } from "notistack";
+// Core dialog: src/components/core/core-dialog.tsx + use-core-dialog.ts</code></pre>
+      </section>
+
+      <hr class="section" />
+
+      <section id="placement">
+        <h2>6. File placement cheat sheet</h2>
+        <table>
+          <thead>
+            <tr><th>You are building</th><th>Put it here</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Page UI + composition</td><td><code>src/features/&lt;x&gt;/&lt;x&gt;-page.tsx</code></td></tr>
+            <tr><td>Feature-only components</td><td><code>src/features/&lt;x&gt;/components/</code></td></tr>
+            <tr><td>API / query / mutation hooks</td><td><code>src/features/&lt;x&gt;/hook/</code></td></tr>
+            <tr><td>Yup schemas</td><td><code>src/features/&lt;x&gt;/schema/</code></td></tr>
+            <tr><td>Zustand store</td><td><code>src/features/&lt;x&gt;/store/</code></td></tr>
+            <tr><td>Next.js route</td><td><code>src/app/(dashboard)/.../page.tsx</code> (thin)</td></tr>
+            <tr><td>Shared button/input/grid</td><td><code>src/components/core/</code> (only if truly global)</td></tr>
+            <tr><td>Menu / theme / ACL config</td><td><code>src/config/</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <hr class="section" />
+
+      <section id="avoid">
+        <h2>7. What to avoid when using AI</h2>
+        <table>
+          <thead>
+            <tr><th>Avoid</th><th>Why</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Large logic in <code>src/app/**/page.tsx</code></td><td>Breaks feature-first architecture</td></tr>
+            <tr><td><code>camelCase</code> or <code>PascalCase</code> file names</td><td>Conflicts with kebab-case convention</td></tr>
+            <tr><td>New HTTP libraries or fetch wrappers</td><td><code>http-client</code> already handles auth + errors</td></tr>
+            <tr><td>Storing API data only in Zustand</td><td>Use TanStack Query</td></tr>
+            <tr><td>Editing <code>.env.local</code> in docs/commits</td><td>Generated by <code>predev</code> / <code>prebuild</code> scripts</td></tr>
+            <tr><td>Committing real <code>NEXTAUTH_SECRET</code> / licenses</td><td>Security risk</td></tr>
+            <tr><td>Rewriting core components for one screen</td><td>Extend or compose existing core UI</td></tr>
+            <tr><td>Ignoring <code>AccessController</code> / <code>ModuleNameEnum</code></td><td>Security gaps on restricted modules</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <hr class="section" />
+
+      <section id="checklist">
+        <h2>8. Review checklist before you merge AI output</h2>
+        <ul class="checklist">
+          <li>Files are <strong>kebab-case</strong> and under the correct <code>features/</code> or <code>app/</code> path</li>
+          <li>Imports use <strong><code>@/</code></strong></li>
+          <li>API uses <strong><code>httpClient</code></strong> and matches backend paths</li>
+          <li>Server state uses <strong>TanStack Query</strong> with sensible <code>queryKey</code></li>
+          <li>Forms use <strong>Yup + react-hook-form</strong> and core form fields</li>
+          <li>New routes have <strong>menu entries</strong> if they should appear in the sidebar</li>
+          <li>Restricted actions use <strong><code>AccessController</code></strong> + <code>ModuleNameEnum</code></li>
+          <li><strong><code>pnpm lint</code></strong> passes (Husky enforces zero warnings)</li>
+          <li>No unrelated files changed</li>
+          <li>Env/secrets not added to git</li>
+        </ul>
+      </section>
+
+      <hr class="section" />
+
+      <section id="workflow">
+        <h2>9. Example session workflow</h2>
+        <ol>
+          <li><strong>Read</strong> <a href="DEVELOPER_GUIDE.html#new-feature">DEVELOPER_GUIDE</a> §8 and skim the closest feature in <code>src/features/</code>.</li>
+          <li><strong>Prompt</strong> with @-mentions (template §4) and explicit “follow users/roles pattern”.</li>
+          <li><strong>Run</strong> <code>pnpm dev</code> and test the route and API against your backend.</li>
+          <li><strong>Lint</strong> — <code>pnpm lint</code> (or let agent run it).</li>
+          <li><strong>Commit</strong> with a clear message; do not ask the agent to commit unless you want it to.</li>
+        </ol>
+      </section>
+
+      <hr class="section" />
+
+      <section id="troubleshooting">
+        <h2>10. Troubleshooting with Cursor</h2>
+        <table>
+          <thead>
+            <tr><th>Problem</th><th>What to ask / check</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>401 on API calls</td><td>Session/token; <code>http-client</code> redirect; <code>BASE_URL</code> in <code>.env.development</code></td></tr>
+            <tr><td>Env not applied</td><td>Run <code>pnpm dev</code> so <code>predev</code> copies <code>.env.development</code> → <code>.env.local</code></td></tr>
+            <tr><td>MUI X license warning</td><td><code>NEXT_PUBLIC_MUI_LICENSE</code> in env file</td></tr>
+            <tr><td>Route 404</td><td>File under <code>src/app/</code> + correct route group <code>(dashboard)</code></td></tr>
+            <tr><td>Redirect to sign-in</td><td><code>src/middleware.ts</code> matcher; route not in public list</td></tr>
+            <tr><td>AI used wrong path for API client</td><td>Correct file is <code>src/utils/http-client.ts</code> (not <code>api-client.ts</code>)</td></tr>
+            <tr><td>Lint fails on commit</td><td>Fix ESLint/Prettier issues; pre-commit allows 0 warnings</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <hr class="section" />
+
+      <section id="links">
+        <h2>11. Links</h2>
+        <ul>
+          <li>Human setup guide: <a href="DEVELOPER_GUIDE.html">DEVELOPER_GUIDE.html</a> · <a href="DEVELOPER_GUIDE.md">.md</a></li>
+          <li>Deployment: <a href="DEVELOPER_DEPLOYMENT_GUIDE.html">DEVELOPER_DEPLOYMENT_GUIDE.html</a> · <a href="DEVELOPER_DEPLOYMENT_GUIDE.md">.md</a></li>
+          <li>Project README: <a href="../README.md">README.md</a></li>
+          <li><a href="https://docs.cursor.com/" target="_blank" rel="noopener">Cursor Docs</a></li>
+        </ul>
+      </section>
+
+      <footer class="site-footer">
+        <p><strong>Tip:</strong> The best prompts are specific, reference real files with <code>@</code>, and name the feature to mirror. Vague requests (“add a products page”) produce code that drifts from this template; anchored requests stay consistent with Rekadia’s boilerplate.</p>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1066" viewBox="0 0 1600 1066">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef1f5"/><stop offset="1" stop-color="#e3e8ee"/></linearGradient></defs>
+<rect width="1600" height="1066" rx="0" fill="url(#g)"/>
+<rect x="48" y="32" width="1504" height="1002" rx="0" fill="none" stroke="#c3ccd8" stroke-width="9" stroke-dasharray="38 25"/>
+<g transform="translate(800.0 426.6)" fill="none" stroke="#8a97a8" stroke-width="8.4" stroke-linejoin="round">
+<rect x="-99" y="-76" width="198" height="152" rx="15"/>
+<circle cx="-42" cy="-27" r="19"/>
+<path d="M-99 53 L-23 -8 L30 38 L61 15 L99 46"/>
+</g>
+<text x="50%" y="601" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-size="76" font-weight="600" fill="#8a97a8">Hero illustration</text>
+<text x="50%" y="700" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-size="53" fill="#8a97a8">Placeholder · 1600×1066</text>
+</svg>

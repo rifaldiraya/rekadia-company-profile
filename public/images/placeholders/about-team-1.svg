@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef1f5"/><stop offset="1" stop-color="#e3e8ee"/></linearGradient></defs>
+<rect width="800" height="600" fill="url(#g)"/>
+<rect x="12.0" y="12.0" width="776.0" height="576.0" fill="none" stroke="#c3ccd8" stroke-width="4.8" stroke-dasharray="21.0 13.2"/>
+<g transform="translate(400.0 240.0) scale(1.608)" fill="none" stroke="#8a97a8" stroke-width="4" stroke-linejoin="round">
+<rect x="-34" y="-26" width="68" height="52" rx="5"/>
+<circle cx="-14" cy="-9" r="6"/>
+<path d="M-34 18 L-8 -3 L10 13 L21 5 L34 16"/>
+</g>
+<text x="50%" y="320.4" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-size="41.8" font-weight="600" fill="#8a97a8">Rekadia team photo 1</text>
+<text x="50%" y="375.1" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-size="28.9" fill="#8a97a8">Placeholder · 800×600</text>
+</svg>

@@ -1,0 +1,56 @@
+# Node.js with React
+# Local laptop: pnpm (pnpm-lock.yaml)
+# Azure agent: npm (package-lock.json)
+
+trigger:
+- staging
+
+pool: 
+  name: Default
+  demands:
+  - agent.name -equals VM-DEVELOPMENT
+
+steps:
+- task: PowerShell@2
+  displayName: Install and build
+  inputs:
+    targetType: 'inline'
+    script: |
+      $ErrorActionPreference = 'Stop'
+      $env:NODE_OPTIONS = '--max-old-space-size=8192'
+      $env:HUSKY = '0'
+      $env:NEXT_TELEMETRY_DISABLED = '1'
+
+      if (Test-Path package-lock.json) {
+        npm ci --no-fund --no-audit --legacy-peer-deps
+      } else {
+        npm install --no-fund --no-audit --legacy-peer-deps
+      }
+
+      npm run build:staging
+
+- task: PowerShell@2
+  displayName: Prepare IIS artifact
+  inputs:
+    filePath: 'scripts/prepare-iis-artifact.ps1'
+    arguments: '-Destination "$(Build.ArtifactStagingDirectory)/iis"'
+
+- task: IISWebAppManagementOnMachineGroup@0
+  displayName: Stop App Pool
+  inputs:
+    IISDeploymentType: 'IISApplicationPool'
+    ActionIISApplicationPool: 'StopAppPool'
+    StartStopRecycleAppPoolName: 'RKD.TEMPLATE2026.STAGING'
+
+- task: IISWebAppDeploymentOnMachineGroup@0
+  displayName: Deploy to IIS
+  inputs:
+    WebSiteName: 'RKD.TEMPLATE2026.STAGING' # << --- APP NAME
+    Package: '$(Build.ArtifactStagingDirectory)/iis'
+
+- task: IISWebAppManagementOnMachineGroup@0
+  displayName: Start App Pool
+  inputs:
+    IISDeploymentType: 'IISApplicationPool'
+    ActionIISApplicationPool: 'StartAppPool'
+    StartStopRecycleAppPoolName: 'RKD.TEMPLATE2026.STAGING'

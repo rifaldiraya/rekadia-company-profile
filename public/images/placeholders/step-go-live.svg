@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef1f5"/><stop offset="1" stop-color="#e3e8ee"/></linearGradient></defs>
+<rect width="800" height="800" fill="url(#g)"/>
+<rect x="24" y="24" width="752" height="752" fill="none" stroke="#c3ccd8" stroke-width="7.0" stroke-dasharray="28 19"/>
+<g transform="translate(400.0 320.0) scale(1.000)" fill="none" stroke="#8a97a8" stroke-width="6.3" stroke-linejoin="round">
+<rect x="-74" y="-57" width="148" height="114" rx="11"/>
+<circle cx="-31" cy="-20" r="14"/>
+<path d="M-74 40 L-17 -6 L23 28 L46 11 L74 34"/>
+</g>
+<text x="50%" y="451" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-size="43" font-weight="600" fill="#8a97a8">Go Live &amp; Monitor</text>
+<text x="50%" y="525" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-size="40" fill="#8a97a8">Placeholder · 800×800</text>
+</svg>

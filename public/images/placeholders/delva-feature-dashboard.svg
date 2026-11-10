@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1877" height="910" viewBox="0 0 1877 910">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef1f5"/><stop offset="1" stop-color="#e3e8ee"/></linearGradient></defs>
+<rect width="1877" height="910" fill="url(#g)"/>
+<rect x="18.2" y="18.2" width="1840.6" height="873.6" fill="none" stroke="#c3ccd8" stroke-width="7.3" stroke-dasharray="31.9 20.0"/>
+<g transform="translate(938.5 364.0) scale(2.440)" fill="none" stroke="#8a97a8" stroke-width="4" stroke-linejoin="round">
+<rect x="-34" y="-26" width="68" height="52" rx="5"/>
+<circle cx="-14" cy="-9" r="6"/>
+<path d="M-34 18 L-8 -3 L10 13 L21 5 L34 16"/>
+</g>
+<text x="50%" y="486.0" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-size="63.4" font-weight="600" fill="#8a97a8">Delva dashboard screen</text>
+<text x="50%" y="568.9" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-size="43.9" fill="#8a97a8">Placeholder · 1877×910</text>
+</svg>

@@ -1,0 +1,34 @@
+# dependencies
+/node_modules
+/.pnpm-store
+/.pnp
+.pnp.*
+.yarn/*
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# typescript
+*.tsbuildinfo
+
+# env (generated from .env.development|staging|production by scripts/pre*.cjs)
+.env.local
+.env*.local
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# misc
+.DS_Store
+*.pem
+.vercel
+
+# cursor rules (local only)
+/.cursor/rules/

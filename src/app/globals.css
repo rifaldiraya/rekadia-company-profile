@@ -1,0 +1,8 @@
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+.MuiTabPanel-root {
+  padding: 0;
+  margin: 18px 0;
+}

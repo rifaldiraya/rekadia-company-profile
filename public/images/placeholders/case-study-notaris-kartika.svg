@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef1f5"/><stop offset="1" stop-color="#e3e8ee"/></linearGradient></defs>
+<rect width="1920" height="1080" fill="url(#g)"/>
+<rect x="21.6" y="21.6" width="1876.8" height="1036.8" fill="none" stroke="#c3ccd8" stroke-width="8.6" stroke-dasharray="37.8 23.8"/>
+<g transform="translate(960.0 432.0) scale(2.895)" fill="none" stroke="#8a97a8" stroke-width="4" stroke-linejoin="round">
+<rect x="-34" y="-26" width="68" height="52" rx="5"/>
+<circle cx="-14" cy="-9" r="6"/>
+<path d="M-34 18 L-8 -3 L10 13 L21 5 L34 16"/>
+</g>
+<text x="50%" y="576.8" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-size="75.3" font-weight="600" fill="#8a97a8">Notary Kartika case study</text>
+<text x="50%" y="675.2" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-size="52.1" fill="#8a97a8">Placeholder · 1920×1080</text>
+</svg>

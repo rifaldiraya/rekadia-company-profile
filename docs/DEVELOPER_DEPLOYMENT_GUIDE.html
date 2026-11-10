@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Developer Deployment Guide — RKD Template</title>
+  <link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="DEVELOPER_GUIDE.html">RKD Template<span>Documentation</span></a>
+    <nav class="nav-links">
+      <a href="DEVELOPER_GUIDE.html">Developer Guide</a>
+      <a href="DEVELOPER_AI_GUIDE.html">AI Guide (Cursor)</a>
+      <a href="DEVELOPER_DEPLOYMENT_GUIDE.html" class="active">Deployment</a>
+      <a href="../README.md">README</a>
+    </nav>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <h2>Contents</h2>
+
+      <div class="sidebar-toc active" data-toc="offline" id="toc-offline">
+        <ol>
+          <li><a href="#off-overview">Ringkasan arsitektur</a></li>
+          <li><a href="#off-prereq">Prerequisites</a></li>
+          <li><a href="#off-fase1">Fase 1 — Windows</a></li>
+          <li><a href="#off-env">1. Environment</a></li>
+          <li><a href="#off-build">2. Build</a></li>
+          <li><a href="#off-pack">3–8. Pack &amp; transfer</a></li>
+          <li><a href="#off-fase2">Fase 2 — Ubuntu</a></li>
+          <li><a href="#off-install">9–12. Install &amp; place</a></li>
+          <li><a href="#off-run">13. Jalankan Next.js</a></li>
+          <li><a href="#off-nginx">14. Nginx proxy</a></li>
+          <li><a href="#off-verify">15. Verifikasi</a></li>
+          <li><a href="#off-mistakes">Kesalahan umum</a></li>
+        </ol>
+      </div>
+
+      <div class="sidebar-toc" data-toc="online" id="toc-online">
+        <ol>
+          <li><a href="#on-overview">Ringkasan arsitektur</a></li>
+          <li><a href="#on-prereq">Prerequisites</a></li>
+          <li><a href="#on-nginx-node">1–2. Nginx &amp; Node</a></li>
+          <li><a href="#on-env">3. Environment</a></li>
+          <li><a href="#on-build">4. Build / upload</a></li>
+          <li><a href="#on-run">5. systemd / PM2</a></li>
+          <li><a href="#on-proxy">6. Nginx proxy</a></li>
+          <li><a href="#on-ssl">7. HTTPS (opsional)</a></li>
+          <li><a href="#on-verify">8. Verifikasi &amp; redeploy</a></li>
+        </ol>
+      </div>
+
+      <div class="sidebar-toc" data-toc="iis" id="toc-iis">
+        <ol>
+          <li><a href="#iis-overview">Ringkasan arsitektur</a></li>
+          <li><a href="#iis-prereq">Prerequisites</a></li>
+          <li><a href="#iis-install">1. Install komponen</a></li>
+          <li><a href="#iis-build">2. Env &amp; build</a></li>
+          <li><a href="#iis-webconfig">3. web.config</a></li>
+          <li><a href="#iis-site">4. Site &amp; App Pool</a></li>
+          <li><a href="#iis-deploy">5. Deploy file</a></li>
+          <li><a href="#iis-test">6. Recycle &amp; uji</a></li>
+          <li><a href="#iis-troubleshoot">7. Troubleshooting</a></li>
+          <li><a href="#iis-redeploy">8. Redeploy</a></li>
+        </ol>
+      </div>
+    </aside>
+
+    <main>
+      <h1>Developer Deployment Guide</h1>
+      <p class="lead">Step-by-step deploy RKD Next.js Template ke Linux (offline / online) atau Windows IIS.</p>
+      <p class="stack-badge">Node.js 20/22 LTS · Next.js · Nginx · IIS + iisnode</p>
+
+      <div class="tab-bar" role="tablist" aria-label="Target deploy">
+        <button type="button" class="tab-btn active" role="tab" aria-selected="true" data-tab="offline">Linux Offline (Ubuntu)</button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="online">Linux Online (Ubuntu)</button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="iis">Windows IIS</button>
+      </div>
+
+      <!-- ========== TAB 1: OFFLINE ========== -->
+      <div class="tab-panel active" id="panel-offline" role="tabpanel" data-panel="offline">
+        <h2 style="margin-top:0">Linux Offline (Ubuntu)</h2>
+        <p>Preparation di laptop Windows (online) → deploy ke server Ubuntu <strong>tanpa internet</strong>.</p>
+
+        <section id="off-overview">
+          <h3>Ringkasan arsitektur</h3>
+          <pre><code>Browser  →  Nginx (:80/:443)  →  Node.js (next start :3000)
+                                      ↓
+                               Backend API (LAN / internal)</code></pre>
+          <p>Aplikasi ini <strong>bukan</strong> static site. Nginx hanya reverse proxy; proses Node harus tetap berjalan.</p>
+          <pre><code>Laptop Windows (ada internet)          Server Ubuntu (offline)
+  1. Set env &amp; build                     4. Install Node + Nginx dari file lokal
+  2. Download Node Linux + Nginx .deb    5. Copy app → jalankan next start
+  3. Pack ke USB / media                 6. Nginx reverse proxy ke :3000</code></pre>
+        </section>
+
+        <hr class="section" />
+
+        <section id="off-prereq">
+          <h3>Prerequisites</h3>
+          <table>
+            <thead><tr><th>Item</th><th>Keterangan</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Laptop Windows</strong></td><td>Ada internet; Node.js 20.x / 22.x untuk build</td></tr>
+              <tr><td><strong>Server Ubuntu</strong></td><td>Offline; catat versi (20.04 / 22.04 / 24.04)</td></tr>
+              <tr><td><strong>Media transfer</strong></td><td>USB, harddisk, atau share LAN</td></tr>
+              <tr><td><strong>Backend API</strong></td><td>Reachable dari browser user di LAN</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <hr class="section" />
+
+        <section id="off-fase1">
+          <h3>Fase 1 — Preparation di laptop Windows</h3>
+        </section>
+
+        <section id="off-env">
+          <h3>1. Siapkan environment produksi</h3>
+          <p>Edit <code>.env.production</code> (atau <code>.env.staging</code>) <strong>sebelum build</strong>:</p>
+          <pre><code>BASE_URL=http://IP-API-INTERNAL/services/api/v1
+NEXT_PUBLIC_BASE_URL=http://IP-API-INTERNAL/services/api/v1
+NEXTAUTH_URL=http://IP-SERVER-UBUNTU
+NEXTAUTH_SECRET=&lt;secret-kuat&gt;
+JWT_SECRET=&lt;secret-kuat&gt;</code></pre>
+          <ul>
+            <li><code>NEXTAUTH_URL</code> = URL yang dibuka user di browser.</li>
+            <li><code>NEXT_PUBLIC_*</code> di-bake saat build — ubah nilai → <strong>wajib rebuild</strong>.</li>
+            <li>Jangan pakai <code>http://localhost:3000</code> untuk <code>NEXTAUTH_URL</code> di produksi.</li>
+          </ul>
+          <pre><code>node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"</code></pre>
+        </section>
+
+        <hr class="section" />
+
+        <section id="off-build">
+          <h3>2. Install dependency &amp; build</h3>
+          <pre><code>npm install
+npm run build:prod</code></pre>
+          <table>
+            <thead><tr><th>Command</th><th>Env source → <code>.env.local</code></th></tr></thead>
+            <tbody>
+              <tr><td><code>npm run build:dev</code></td><td><code>.env.development</code></td></tr>
+              <tr><td><code>npm run build:staging</code></td><td><code>.env.staging</code></td></tr>
+              <tr><td><code>npm run build:prod</code></td><td><code>.env.production</code></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <hr class="section" />
+
+        <section id="off-pack">
+          <h3>3–8. Pack aplikasi, runtime &amp; transfer</h3>
+          <p>Struktur contoh <code>D:\deploy-rkd-app\</code>:</p>
+          <pre><code>D:\deploy-rkd-app\
+├── app\                 # aplikasi setelah build
+├── runtime\             # Node.js Linux tarball (+ opsional pm2)
+└── nginx-debs\          # paket .deb Nginx</code></pre>
+          <p>Yang wajib di <code>app\</code>: <code>.next</code>, <code>node_modules</code>, <code>public</code>, <code>package.json</code>, <code>next.config.*</code>, <code>.env.local</code>.</p>
+          <pre><code>robocopy "E:\path\ke\RKD.TEMPLATE.2026.APP" "D:\deploy-rkd-app\app" /E /XD .git</code></pre>
+          <p>Unduh <code>node-v22.x.x-linux-x64.tar.xz</code> dari <a href="https://nodejs.org/dist/" target="_blank" rel="noopener">nodejs.org/dist</a> ke <code>runtime\</code>. <strong>Jangan</strong> bawa <code>.msi</code> Windows.</p>
+          <p>Nginx <code>.deb</code> (versi OS harus cocok) — dari Ubuntu online:</p>
+          <pre><code>mkdir nginx-debs &amp;&amp; cd nginx-debs
+sudo apt-get update
+apt-get download nginx nginx-common nginx-core</code></pre>
+          <p>Opsional: <code>npm pack pm2</code> → taruh di <code>runtime\</code>. Zip seluruh folder ke USB.</p>
+        </section>
+
+        <hr class="section" />
+
+        <section id="off-fase2">
+          <h3>Fase 2 — Deploy di server Ubuntu (offline)</h3>
+        </section>
+
+        <section id="off-install">
+          <h3>9–12. Copy, install Node &amp; Nginx, letakkan app</h3>
+          <pre><code>sudo mkdir -p /opt/deploy-rkd-app
+sudo cp -a /media/usb/deploy-rkd-app/. /opt/deploy-rkd-app/
+
+cd /opt/deploy-rkd-app/runtime
+sudo tar -xJf node-v22.*-linux-x64.tar.xz -C /usr/local --strip-components=1
+node -v &amp;&amp; npm -v
+
+cd /opt/deploy-rkd-app/nginx-debs
+sudo dpkg -i *.deb
+nginx -v
+
+sudo mkdir -p /var/www/rkd-app
+sudo cp -a /opt/deploy-rkd-app/app/. /var/www/rkd-app/</code></pre>
+        </section>
+
+        <hr class="section" />
+
+        <section id="off-run">
+          <h3>13. Jalankan Next.js (systemd)</h3>
+          <p>Tes: <code>cd /var/www/rkd-app &amp;&amp; npm run start</code>. Lalu buat <code>/etc/systemd/system/rkd-app.service</code>:</p>
+          <pre><code>[Unit]
+Description=RKD Next.js App
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/rkd-app
+ExecStart=/usr/local/bin/npm run start
+Restart=on-failure
+Environment=NODE_ENV=production
+Environment=PORT=3000
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+          <pre><code>sudo systemctl daemon-reload
+sudo systemctl enable --now rkd-app</code></pre>
+          <p>Alternatif PM2: install dari <code>pm2-*.tgz</code> lokal, lalu <code>pm2 start npm --name rkd-app -- start</code>.</p>
+        </section>
+
+        <hr class="section" />
+
+        <section id="off-nginx">
+          <h3>14. Nginx reverse proxy</h3>
+          <p>Buat <code>/etc/nginx/sites-available/rkd-app</code>:</p>
+          <pre><code>server {
+    listen 80;
+    server_name _;
+    client_max_body_size 50M;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}</code></pre>
+          <pre><code>sudo ln -sf /etc/nginx/sites-available/rkd-app /etc/nginx/sites-enabled/
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo nginx -t &amp;&amp; sudo systemctl reload nginx
+sudo ufw allow 80/tcp</code></pre>
+        </section>
+
+        <hr class="section" />
+
+        <section id="off-verify">
+          <h3>15. Verifikasi &amp; redeploy</h3>
+          <pre><code>curl -I http://127.0.0.1:3000
+curl -I http://127.0.0.1/</code></pre>
+          <p>Redeploy: rebuild di Windows → ganti <code>app\</code> → di Ubuntu stop service, copy, start lagi.</p>
+        </section>
+
+        <hr class="section" />
+
+        <section id="off-mistakes">
+          <h3>Kesalahan yang sering terjadi</h3>
+          <table>
+            <thead><tr><th>Salah</th><th>Benar</th></tr></thead>
+            <tbody>
+              <tr><td>Node Windows (<code>.msi</code>) ke Ubuntu</td><td><code>node-*-linux-x64.tar.xz</code></td></tr>
+              <tr><td>Copy tanpa <code>.next</code> / <code>node_modules</code></td><td>Bawa artifact build lengkap</td></tr>
+              <tr><td>Nginx serve folder sebagai static</td><td>Proxy ke <code>127.0.0.1:3000</code></td></tr>
+              <tr><td><code>NEXTAUTH_URL=localhost</code></td><td>IP/hostname yang diakses user</td></tr>
+              <tr><td><code>.deb</code> beda versi OS</td><td>Codename Ubuntu harus sama</td></tr>
+              <tr><td>Ubah <code>NEXT_PUBLIC_*</code> tanpa rebuild</td><td>Wajib <code>build:prod</code> lagi</td></tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+
+      <!-- ========== TAB 2: ONLINE ========== -->
+      <div class="tab-panel" id="panel-online" role="tabpanel" data-panel="online" hidden>
+        <h2 style="margin-top:0">Linux Online (Ubuntu)</h2>
+        <p>Server Ubuntu <strong>berinternet</strong>. Install Node &amp; Nginx via apt; build di server atau upload artifact.</p>
+
+        <section id="on-overview">
+          <h3>Ringkasan arsitektur</h3>
+          <pre><code>Browser  →  Nginx (:80/:443)  →  Node.js (next start :3000)
+                                      ↓
+                               Backend API</code></pre>
+          <pre><code>1. Install Node + Nginx (apt)
+2. Clone / copy source (atau upload artifact)
+3. npm install + build:prod
+4. systemd / PM2 + Nginx proxy</code></pre>
+        </section>
+
+        <hr class="section" />
+
+        <section id="on-prereq">
+          <h3>Prerequisites</h3>
+          <table>
+            <thead><tr><th>Item</th><th>Keterangan</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Ubuntu</strong></td><td>20.04 / 22.04 / 24.04 dengan internet</td></tr>
+              <tr><td><strong>SSH</strong></td><td>User dengan <code>sudo</code></td></tr>
+              <tr><td><strong>Domain / IP</strong></td><td>Untuk <code>NEXTAUTH_URL</code></td></tr>
+              <tr><td><strong>Backend API</strong></td><td>Reachable dari browser user</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <hr class="section" />
+
+        <section id="on-nginx-node">
+          <h3>1–2. Install Nginx &amp; Node.js</h3>
+          <pre><code>sudo apt update &amp;&amp; sudo apt upgrade -y
+sudo apt install -y nginx curl
+
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt install -y nodejs
+node -v &amp;&amp; npm -v
+
+# opsional
+sudo npm install -g pm2</code></pre>
+        </section>
+
+        <hr class="section" />
+
+        <section id="on-env">
+          <h3>3. Siapkan environment</h3>
+          <pre><code>BASE_URL=https://api.example.com/services/api/v1
+NEXT_PUBLIC_BASE_URL=https://api.example.com/services/api/v1
+NEXTAUTH_URL=https://app.example.com
+NEXTAUTH_SECRET=&lt;secret-kuat&gt;
+JWT_SECRET=&lt;secret-kuat&gt;</code></pre>
+        </section>
+
+        <hr class="section" />
+
+        <section id="on-build">
+          <h3>4. Build di server atau upload artifact</h3>
+          <h4>Opsi A — Build di server</h4>
+          <pre><code>sudo mkdir -p /var/www/rkd-app
+sudo chown -R $USER:$USER /var/www/rkd-app
+cd /var/www/rkd-app
+git clone &lt;repository-url&gt; .
+npm install
+npm run build:prod</code></pre>
+          <h4>Opsi B — Build di laptop/CI, lalu rsync</h4>
+          <pre><code># di mesin build
+npm install &amp;&amp; npm run build:prod
+rsync -avz --exclude .git ./ user@SERVER:/var/www/rkd-app/
+
+# di server (jika perlu)
+cd /var/www/rkd-app &amp;&amp; npm ci --omit=dev</code></pre>
+        </section>
+
+        <hr class="section" />
+
+        <section id="on-run">
+          <h3>5. Jalankan dengan systemd atau PM2</h3>
+          <p><code>/etc/systemd/system/rkd-app.service</code>:</p>
+          <pre><code>[Unit]
+Description=RKD Next.js App
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/rkd-app
+ExecStart=/usr/bin/npm run start
+Restart=on-failure
+Environment=NODE_ENV=production
+Environment=PORT=3000
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+          <pre><code>sudo systemctl daemon-reload
+sudo systemctl enable --now rkd-app</code></pre>
+          <p>Atau: <code>pm2 start npm --name rkd-app -- start</code> → <code>pm2 save</code> → <code>pm2 startup systemd</code>.</p>
+        </section>
+
+        <hr class="section" />
+
+        <section id="on-proxy">
+          <h3>6. Nginx reverse proxy</h3>
+          <p>Sama seperti tab Offline — proxy <code>/</code> ke <code>http://127.0.0.1:3000</code>, lalu:</p>
+          <pre><code>sudo ln -sf /etc/nginx/sites-available/rkd-app /etc/nginx/sites-enabled/
+sudo nginx -t &amp;&amp; sudo systemctl reload nginx
+sudo ufw allow 'Nginx Full'</code></pre>
+        </section>
+
+        <hr class="section" />
+
+        <section id="on-ssl">
+          <h3>7. HTTPS (opsional — Certbot)</h3>
+          <pre><code>sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d app.example.com</code></pre>
+          <p>Setelah HTTPS, set <code>NEXTAUTH_URL=https://...</code> dan <strong>rebuild</strong> jika URL berubah.</p>
+        </section>
+
+        <hr class="section" />
+
+        <section id="on-verify">
+          <h3>8. Verifikasi &amp; redeploy</h3>
+          <pre><code>curl -I http://127.0.0.1:3000
+curl -I https://app.example.com/</code></pre>
+          <pre><code>cd /var/www/rkd-app
+git pull          # atau rsync
+npm install
+npm run build:prod
+sudo systemctl restart rkd-app</code></pre>
+        </section>
+      </div>
+
+      <!-- ========== TAB 3: IIS ========== -->
+      <div class="tab-panel" id="panel-iis" role="tabpanel" data-panel="iis" hidden>
+        <h2 style="margin-top:0">Windows IIS</h2>
+        <p>Deploy memakai <strong>iisnode</strong>, custom <code>server.js</code>, dan <code>web.config</code> di root repo.</p>
+
+        <section id="iis-overview">
+          <h3>Ringkasan arsitektur</h3>
+          <pre><code>Browser  →  IIS (URL Rewrite)  →  iisnode  →  server.js (Next.js)
+                                                      ↓
+                                               Backend API</code></pre>
+          <p>Referensi CI: <code>azure-pipeline-dev.yml</code>, <code>azure-pipeline-staging.yml</code>, <code>azure-pipeline-prod.yml</code>.</p>
+        </section>
+
+        <hr class="section" />
+
+        <section id="iis-prereq">
+          <h3>Prerequisites</h3>
+          <table>
+            <thead><tr><th>Item</th><th>Keterangan</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Windows Server</strong></td><td>IIS (Web Server role)</td></tr>
+              <tr><td><strong>Node.js Windows</strong></td><td>LTS 20/22 — path cocok dengan <code>web.config</code></td></tr>
+              <tr><td><strong>iisnode</strong></td><td>Modul IIS untuk Node</td></tr>
+              <tr><td><strong>URL Rewrite</strong></td><td>Rewrite request ke <code>server.js</code></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <hr class="section" />
+
+        <section id="iis-install">
+          <h3>1. Install komponen di server</h3>
+          <ol>
+            <li>Install Node.js Windows LTS dari <a href="https://nodejs.org/" target="_blank" rel="noopener">nodejs.org</a></li>
+            <li>Install IIS (Server Manager → Web Server)</li>
+            <li>Install URL Rewrite Module (Microsoft)</li>
+            <li>Install <a href="https://github.com/Azure/iisnode" target="_blank" rel="noopener">iisnode</a> (x64)</li>
+          </ol>
+          <pre><code>node -v
+where node</code></pre>
+        </section>
+
+        <hr class="section" />
+
+        <section id="iis-build">
+          <h3>2. Environment &amp; build</h3>
+          <p>Edit <code>.env.production</code> / <code>.env.staging</code> sebelum build:</p>
+          <pre><code>BASE_URL=https://api.example.com/services/api/v1
+NEXT_PUBLIC_BASE_URL=https://api.example.com/services/api/v1
+NEXTAUTH_URL=https://app.example.com
+NEXTAUTH_SECRET=&lt;secret-kuat&gt;
+JWT_SECRET=&lt;secret-kuat&gt;</code></pre>
+          <pre><code>npm install
+npm run build:prod
+# atau: npm run build:staging</code></pre>
+        </section>
+
+        <hr class="section" />
+
+        <section id="iis-webconfig">
+          <h3>3. Sesuaikan <code>web.config</code></h3>
+          <ol>
+            <li><code>appSettings</code> — <code>NEXTAUTH_URL</code> &amp; <code>NEXTAUTH_SECRET</code> harus cocok dengan host frontend.</li>
+            <li><code>nodeProcessCommandLine</code> — path <code>node.exe</code> di server, contoh:<br />
+              <code>C:\Program Files\nodejs\node.exe</code></li>
+            <li>Rewrite rule mengarahkan request ke <code>server.js</code> (kecuali path yang di-negate, mis. <code>/services</code>).</li>
+          </ol>
+          <p>Jangan commit secret produksi ke Git; sesuaikan nilai di server / pipeline.</p>
+        </section>
+
+        <hr class="section" />
+
+        <section id="iis-site">
+          <h3>4. Buat Site &amp; Application Pool</h3>
+          <ol>
+            <li>IIS Manager → <strong>Application Pools</strong> → Add: .NET CLR = <strong>No Managed Code</strong></li>
+            <li><strong>Sites</strong> → Add Website: physical path = folder deploy, binding HTTP/HTTPS, pilih App Pool baru</li>
+          </ol>
+        </section>
+
+        <hr class="section" />
+
+        <section id="iis-deploy">
+          <h3>5. Deploy file ke physical path</h3>
+          <table>
+            <thead><tr><th>Path</th><th>Keterangan</th></tr></thead>
+            <tbody>
+              <tr><td><code>.next\</code></td><td>Hasil build</td></tr>
+              <tr><td><code>node_modules\</code></td><td>Runtime deps</td></tr>
+              <tr><td><code>public\</code></td><td>Static assets</td></tr>
+              <tr><td><code>package.json</code></td><td>Scripts / deps</td></tr>
+              <tr><td><code>server.js</code></td><td>Entry iisnode</td></tr>
+              <tr><td><code>web.config</code></td><td>IIS + iisnode</td></tr>
+              <tr><td><code>next.config.*</code></td><td>Config Next</td></tr>
+            </tbody>
+          </table>
+          <p>App Pool identity butuh Read/Execute. Folder <code>iisnode</code> harus writable untuk log.</p>
+        </section>
+
+        <hr class="section" />
+
+        <section id="iis-test">
+          <h3>6. Recycle &amp; uji</h3>
+          <pre><code>Import-Module WebAdministration
+Restart-WebAppPool -Name "RKD.APP"</code></pre>
+          <p>Buka URL binding → uji login NextAuth dan API.</p>
+          <p>Pipeline contoh: <code>npm install</code> → <code>build:staging</code> → recycle App Pool → deploy package ke IIS site.</p>
+        </section>
+
+        <hr class="section" />
+
+        <section id="iis-troubleshoot">
+          <h3>7. Troubleshooting</h3>
+          <table>
+            <thead><tr><th>Gejala</th><th>Cek</th></tr></thead>
+            <tbody>
+              <tr><td>500.19</td><td>URL Rewrite / iisnode belum terpasang</td></tr>
+              <tr><td>500.1001 / iisnode</td><td>Log <code>iisnode\</code>; path <code>node.exe</code></td></tr>
+              <tr><td>Blank / 502</td><td><code>server.js</code> gagal start; permission</td></tr>
+              <tr><td>NextAuth redirect salah</td><td><code>NEXTAUTH_URL</code> ≠ URL browser</td></tr>
+              <tr><td>API gagal</td><td><code>NEXT_PUBLIC_BASE_URL</code> / perlu rebuild</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <hr class="section" />
+
+        <section id="iis-redeploy">
+          <h3>8. Redeploy</h3>
+          <ol>
+            <li>Build ulang (<code>build:prod</code> / <code>build:staging</code>)</li>
+            <li>Overwrite file di physical path (minimal <code>.next</code>)</li>
+            <li>Recycle Application Pool</li>
+          </ol>
+        </section>
+      </div>
+
+      <footer class="site-footer">
+        <p>
+          Sumber Markdown: <a href="DEVELOPER_DEPLOYMENT_GUIDE.md">DEVELOPER_DEPLOYMENT_GUIDE.md</a> ·
+          Setup lokal: <a href="DEVELOPER_GUIDE.html">DEVELOPER_GUIDE</a> ·
+          AI: <a href="DEVELOPER_AI_GUIDE.html">DEVELOPER_AI_GUIDE</a>
+        </p>
+        <p><strong>Support:</strong> PT. Rekadia Solusi Teknologi — <a href="https://www.rekadia.co.id/" target="_blank" rel="noopener">rekadia.co.id</a></p>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      var buttons = document.querySelectorAll(".tab-btn");
+      var panels = document.querySelectorAll(".tab-panel");
+      var tocs = document.querySelectorAll(".sidebar-toc");
+
+      function activate(tabId) {
+        buttons.forEach(function (btn) {
+          var on = btn.getAttribute("data-tab") === tabId;
+          btn.classList.toggle("active", on);
+          btn.setAttribute("aria-selected", on ? "true" : "false");
+        });
+        panels.forEach(function (panel) {
+          var on = panel.getAttribute("data-panel") === tabId;
+          panel.classList.toggle("active", on);
+          if (on) panel.removeAttribute("hidden");
+          else panel.setAttribute("hidden", "");
+        });
+        tocs.forEach(function (toc) {
+          toc.classList.toggle("active", toc.getAttribute("data-toc") === tabId);
+        });
+        try {
+          history.replaceState(null, "", "#" + tabId);
+        } catch (e) {}
+      }
+
+      buttons.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          activate(btn.getAttribute("data-tab"));
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+      });
+
+      var hash = (location.hash || "").replace(/^#/, "");
+      if (hash === "online" || hash === "iis" || hash === "offline") {
+        activate(hash);
+      } else if (hash.indexOf("on-") === 0) {
+        activate("online");
+      } else if (hash.indexOf("iis-") === 0) {
+        activate("iis");
+      } else if (hash.indexOf("off-") === 0) {
+        activate("offline");
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Developer Guide — RKD Next.js Template</title>
+  <link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="DEVELOPER_GUIDE.html">RKD Template<span>Documentation</span></a>
+    <nav class="nav-links">
+      <a href="DEVELOPER_GUIDE.html" class="active">Developer Guide</a>
+      <a href="DEVELOPER_AI_GUIDE.html">AI Guide (Cursor)</a>
+      <a href="DEVELOPER_DEPLOYMENT_GUIDE.html">Deployment</a>
+      <a href="../README.md">README</a>
+    </nav>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#get-project">Get the project</a></li>
+        <li><a href="#install">Install dependencies</a></li>
+        <li><a href="#env">Environment variables</a></li>
+        <li><a href="#dev-server">Development server</a></li>
+        <li><a href="#structure">Folder structure</a></li>
+        <li><a href="#routing">Routing</a></li>
+        <li><a href="#new-feature">Add a new feature</a></li>
+        <li><a href="#auth">Authentication</a></li>
+        <li><a href="#build">Build for deployment</a></li>
+        <li><a href="#quality">Code quality</a></li>
+        <li><a href="#building-blocks">Building blocks</a></li>
+        <li><a href="#dependencies">Update dependencies</a></li>
+        <li><a href="#reading">Further reading</a></li>
+        <li><a href="#quick-ref">Quick reference</a></li>
+      </ol>
+    </aside>
+
+    <main>
+      <h1>Developer Guide — RKD Next.js Template</h1>
+      <p class="lead">Step-by-step guide for developers using this boilerplate for the first time.</p>
+      <p class="stack-badge">Stack: Next.js 15 · React 19 · Material UI 7 · NextAuth · TanStack Query · Zustand · React Hook Form + Yup</p>
+
+      <section id="prerequisites">
+        <h2>1. Prerequisites</h2>
+        <p>Install the following before you start:</p>
+        <table>
+          <thead>
+            <tr><th>Tool</th><th>Recommended version</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Node.js</strong></td><td>20.x or 22.x (LTS)</td><td>Required by Next.js 15</td></tr>
+            <tr><td><strong>pnpm</strong></td><td>Latest</td><td>Used in project scripts (<code>pnpm dev</code>, <code>pnpm build:*</code>). npm or yarn also work if you keep a lock file for Husky</td></tr>
+            <tr><td><strong>Git</strong></td><td>Latest</td><td>For version control and Husky hooks</td></tr>
+          </tbody>
+        </table>
+        <p>Verify installations:</p>
+        <pre><code>node -v
+pnpm -v</code></pre>
+      </section>
+
+      <hr class="section" />
+
+      <section id="get-project">
+        <h2>2. Get the project</h2>
+        <h3>Option A — Clone from repository</h3>
+        <pre><code>git clone &lt;repository-url&gt;
+cd RKD.TEMPLATE.2026.APP</code></pre>
+        <h3>Option B — Copy the template</h3>
+        <p>Copy the folder to your new project directory, then initialize Git if needed:</p>
+        <pre><code>cd &lt;your-project-folder&gt;
+git init</code></pre>
+      </section>
+
+      <hr class="section" />
+
+      <section id="install">
+        <h2>3. Install dependencies</h2>
+        <p>From the project root:</p>
+        <pre><code>pnpm install</code></pre>
+        <blockquote>
+          <strong>Note:</strong> <code>.npmrc</code> sets <code>legacy-peer-deps=true</code> to avoid peer dependency conflicts with MUI and React 19.
+        </blockquote>
+        <p>Husky is configured via the <code>prepare</code> script and runs on install. Pre-commit hooks run <code>lint</code> with zero warnings allowed.</p>
+      </section>
+
+      <hr class="section" />
+
+      <section id="env">
+        <h2>4. Configure environment variables</h2>
+        <p>The template ships with three env files:</p>
+        <table>
+          <thead>
+            <tr><th>File</th><th>Purpose</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>.env.development</code></td><td>Local / dev API and auth settings</td></tr>
+            <tr><td><code>.env.staging</code></td><td>Staging build</td></tr>
+            <tr><td><code>.env.production</code></td><td>Production build</td></tr>
+          </tbody>
+        </table>
+
+        <h3>4.1 What gets copied automatically</h3>
+        <p>When you run <code>pnpm dev</code>, the <code>predev</code> script copies <code>.env.development</code> → <code>.env.local</code>.</p>
+        <p>When you run <code>pnpm build:dev</code>, <code>prebuild:dev</code> does the same. Staging and prod builds copy from <code>.env.staging</code> and <code>.env.production</code> respectively.</p>
+        <p>You normally <strong>do not</strong> edit <code>.env.local</code> by hand; change the source env file for your target environment.</p>
+
+        <h3>4.2 Variables you must review</h3>
+        <p>Open <code>.env.development</code> and adjust at least:</p>
+        <pre><code># API base URL (server + client)
+BASE_URL=https://your-api.example.com/services/api/v1
+NEXT_PUBLIC_BASE_URL=https://your-api.example.com/services/api/v1
+
+# NextAuth
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=&lt;generate-a-strong-secret&gt;
+JWT_SECRET=&lt;generate-a-strong-secret&gt;
+
+# MUI X Premium license (Data Grid, Date Pickers Pro)
+NEXT_PUBLIC_MUI_LICENSE=&lt;your-mui-license-key&gt;</code></pre>
+
+        <h3>4.3 Generate secure secrets</h3>
+        <p>Do not use <code>secret</code> in production.</p>
+        <pre><code>node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"</code></pre>
+        <p>Run twice: once for <code>NEXTAUTH_SECRET</code>, once for <code>JWT_SECRET</code>.</p>
+
+        <h3>4.4 Branding (optional)</h3>
+        <p>Update display names in <code>src/constants.ts</code>:</p>
+        <ul>
+          <li><code>BRAND_NAME</code></li>
+          <li><code>APP_NAME</code></li>
+        </ul>
+      </section>
+
+      <hr class="section" />
+
+      <section id="dev-server">
+        <h2>5. Run the development server</h2>
+        <pre><code>pnpm dev</code></pre>
+        <ol>
+          <li><code>predev</code> copies <code>.env.development</code> to <code>.env.local</code></li>
+          <li>Next.js starts at <strong><a href="http://localhost:3000">http://localhost:3000</a></strong></li>
+        </ol>
+        <h3>First login</h3>
+        <ul>
+          <li>Unauthenticated users are redirected to <code>/sign-in</code> (see <code>src/middleware.ts</code>)</li>
+          <li>Public routes: <code>sign-in</code>, <code>forgot-password</code>, <code>reset-password</code>, and NextAuth API routes</li>
+          <li>Use credentials that match your backend API (configured via <code>BASE_URL</code>)</li>
+        </ul>
+      </section>
+
+      <hr class="section" />
+
+      <section id="structure">
+        <h2>6. Understand the folder structure</h2>
+        <pre><code>src/
+├── app/                    # Next.js App Router (pages &amp; layouts only)
+│   ├── (authentication)/ # Auth-related routes
+│   └── (dashboard)/      # Protected app shell
+├── components/
+│   ├── core/               # Reusable UI (forms, datagrid, dialog, …)
+│   └── layout/             # App chrome (drawer, app bar, …)
+├── config/                 # Theme, menu, routes, access control, query client
+├── features/               # Feature modules (main place for business logic)
+│   └── &lt;feature-name&gt;/
+│       ├── components/
+│       ├── hook/
+│       ├── store/          # Zustand (when needed)
+│       ├── schema/         # Yup validation
+│       └── *-page.tsx      # Page entry component
+├── utils/                  # Helpers (e.g. http-client)
+├── constants.ts            # Env-backed constants
+└── middleware.ts           # Auth route protection</code></pre>
+        <h3>Naming conventions</h3>
+        <ul>
+          <li><strong>Files and folders:</strong> <code>kebab-case</code> (e.g. <code>user-form-modal.tsx</code>, <code>use-get-roles.ts</code>)</li>
+          <li><strong>Imports:</strong> use the <code>@/</code> alias → <code>src/</code> (see <code>tsconfig.json</code>)</li>
+        </ul>
+        <h3>Style guide</h3>
+        <p>Follow the <a href="https://airbnb.io/javascript/react/" target="_blank" rel="noopener">Airbnb React style guide</a> unless the codebase already differs.</p>
+      </section>
+
+      <hr class="section" />
+
+      <section id="routing">
+        <h2>7. How routing works</h2>
+        <ul>
+          <li>Routes live under <code>src/app/</code> using <a href="https://nextjs.org/docs/app" target="_blank" rel="noopener">App Router</a></li>
+          <li><strong>Thin pages:</strong> route files should mostly import a feature page with <code>dynamic()</code> when client-only:</li>
+        </ul>
+        <pre><code>'use client'
+
+import dynamic from 'next/dynamic';
+
+const UsersPage = dynamic(
+  () =&gt; import('@/features/users/users-page'),
+  { ssr: false }
+);
+
+export default function Page() {
+  return &lt;UsersPage /&gt;;
+}</code></pre>
+        <ul>
+          <li>Add menu entries in <code>src/config/menu.config.tsx</code></li>
+          <li>Shared route constants: <code>src/config/route.ts</code></li>
+        </ul>
+      </section>
+
+      <hr class="section" />
+
+      <section id="new-feature">
+        <h2>8. Add a new feature (checklist)</h2>
+        <p>Use this when building a new module (e.g. “Products”).</p>
+
+        <h3>Step 1 — Create the feature folder</h3>
+        <pre><code>src/features/products/
+├── components/
+├── hook/
+├── schema/          # if forms exist
+└── products-page.tsx</code></pre>
+
+        <h3>Step 2 — API + data fetching</h3>
+        <ol>
+          <li>Add API functions using <code>httpClient</code> from <code>src/utils/http-client.ts</code></li>
+          <li>Wrap calls in TanStack Query hooks under <code>hook/</code></li>
+        </ol>
+        <p>Example pattern (from roles):</p>
+        <pre><code>import httpClient from "@/utils/http-client";
+import { useQuery } from "@tanstack/react-query";
+
+export const getProductsApi = () =&gt; httpClient.get("/products");
+
+export default function useGetProducts() {
+  return useQuery({
+    queryFn: getProductsApi,
+    queryKey: ["products"],
+  });
+}</code></pre>
+
+        <h3>Step 3 — Forms (if needed)</h3>
+        <ul>
+          <li>Schema: <code>schema/</code> with <strong>Yup</strong></li>
+          <li>Form: <strong>react-hook-form</strong> + <code>yupResolver</code></li>
+          <li>Reuse fields from <code>src/components/core/form/</code></li>
+        </ul>
+
+        <h3>Step 4 — Add the route</h3>
+        <p>Create <code>src/app/(dashboard)/products/page.tsx</code> that imports your feature page (see §7).</p>
+
+        <h3>Step 5 — Sidebar menu</h3>
+        <p>Add an item in <code>src/config/menu.config.tsx</code> (<code>mainMenuConfig</code> or <code>secondMenuConfig</code>).</p>
+
+        <h3>Step 6 — Access control (if restricted)</h3>
+        <ol>
+          <li>Add module to <code>ModuleNameEnum</code> in <code>src/config/access-control.config.ts</code></li>
+          <li>Set <code>moduleName</code> on the menu item</li>
+          <li>Wrap sensitive UI with <code>AccessController</code> from <code>src/components/access-controller.tsx</code></li>
+        </ol>
+      </section>
+
+      <hr class="section" />
+
+      <section id="auth">
+        <h2>9. Authentication overview</h2>
+        <ul>
+          <li><strong>NextAuth</strong> handles sessions; see auth API routes under <code>src/app/api/auth/</code></li>
+          <li><strong>Middleware</strong> (<code>src/middleware.ts</code>) protects dashboard routes</li>
+          <li>API calls attach <code>Bearer</code> token via <code>http-client</code> interceptors</li>
+          <li>401 responses redirect to <code>/sign-in</code></li>
+        </ul>
+        <p>Regenerate <code>NEXTAUTH_SECRET</code> for every new deployment environment.</p>
+      </section>
+
+      <hr class="section" />
+
+      <section id="build">
+        <h2>10. Build for deployment</h2>
+        <table>
+          <thead>
+            <tr><th>Command</th><th>Env source copied to <code>.env.local</code></th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>pnpm build:dev</code></td><td><code>.env.development</code></td></tr>
+            <tr><td><code>pnpm build:staging</code></td><td><code>.env.staging</code></td></tr>
+            <tr><td><code>pnpm build:prod</code></td><td><code>.env.production</code></td></tr>
+          </tbody>
+        </table>
+        <p>Then start the production server:</p>
+        <pre><code>pnpm start</code></pre>
+        <p>CI pipelines are defined in <code>azure-pipeline-dev.yml</code>, <code>azure-pipeline-staging.yml</code>, and <code>azure-pipeline-prod.yml</code>.</p>
+      </section>
+
+      <hr class="section" />
+
+      <section id="quality">
+        <h2>11. Code quality</h2>
+        <pre><code>pnpm lint          # ESLint (Next + TypeScript + Prettier)</code></pre>
+        <p>Pre-commit (Husky) runs lint with <code>--max-warnings 0</code>. Fix all warnings before committing.</p>
+      </section>
+
+      <hr class="section" />
+
+      <section id="building-blocks">
+        <h2>12. Common building blocks</h2>
+        <table>
+          <thead>
+            <tr><th>Need</th><th>Location</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Data grid</td><td><code>src/components/core/core-datagrid/</code></td></tr>
+            <tr><td>Dialog</td><td><code>CoreDialog</code> + <code>use-core-dialog</code></td></tr>
+            <tr><td>Snackbar</td><td><code>enqueueSnackbar</code> from <code>notistack</code></td></tr>
+            <tr><td>Global loader</td><td><code>use-app-loader</code> in <code>src/hook/</code></td></tr>
+            <tr><td>Theme</td><td><code>src/config/theme.config.ts</code></td></tr>
+            <tr><td>React Query setup</td><td><code>src/config/query-client.config.ts</code></td></tr>
+            <tr><td>Providers</td><td><code>src/app/provider.tsx</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <hr class="section" />
+
+      <section id="dependencies">
+        <h2>13. Update dependencies (optional)</h2>
+        <pre><code>npm i -g npm-check-updates
+ncu -u
+pnpm install</code></pre>
+        <p>Test thoroughly after major upgrades (Next, MUI, React).</p>
+      </section>
+
+      <hr class="section" />
+
+      <section id="reading">
+        <h2>14. Further reading</h2>
+        <ul>
+          <li>Project overview and patterns: <a href="../README.md">README.md</a></li>
+          <li>Coding with Cursor AI: <a href="DEVELOPER_AI_GUIDE.html">DEVELOPER_AI_GUIDE.html</a> · <a href="DEVELOPER_AI_GUIDE.md">.md</a></li>
+          <li>Deployment: <a href="DEVELOPER_DEPLOYMENT_GUIDE.html">DEVELOPER_DEPLOYMENT_GUIDE.html</a> · <a href="DEVELOPER_DEPLOYMENT_GUIDE.md">.md</a></li>
+        </ul>
+        <h3>Official docs</h3>
+        <ul>
+          <li><a href="https://nextjs.org/docs" target="_blank" rel="noopener">Next.js</a></li>
+          <li><a href="https://mui.com/material-ui/getting-started/" target="_blank" rel="noopener">Material UI</a></li>
+          <li><a href="https://next-auth.js.org/" target="_blank" rel="noopener">NextAuth</a></li>
+          <li><a href="https://tanstack.com/query/latest" target="_blank" rel="noopener">TanStack Query</a></li>
+          <li><a href="https://react-hook-form.com/" target="_blank" rel="noopener">React Hook Form</a></li>
+        </ul>
+      </section>
+
+      <hr class="section" />
+
+      <section id="quick-ref">
+        <h2>Quick reference</h2>
+        <pre><code>pnpm install          # Install deps + Husky
+pnpm dev              # Dev server (port 3000)
+pnpm lint             # Lint
+pnpm build:dev        # Dev build
+pnpm build:staging    # Staging build
+pnpm build:prod       # Production build
+pnpm start            # Run production build</code></pre>
+      </section>
+
+      <footer class="site-footer">
+        <p><strong>Support:</strong> PT. Rekadia Solusi Teknologi — <a href="https://www.rekadia.co.id/" target="_blank" rel="noopener">rekadia.co.id</a></p>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>

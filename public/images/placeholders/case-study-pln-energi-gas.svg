@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1078" height="604" viewBox="0 0 1078 604">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef1f5"/><stop offset="1" stop-color="#e3e8ee"/></linearGradient></defs>
+<rect width="1078" height="604" fill="url(#g)"/>
+<rect x="12.1" y="12.1" width="1053.8" height="579.8" fill="none" stroke="#c3ccd8" stroke-width="4.8" stroke-dasharray="21.1 13.3"/>
+<g transform="translate(539.0 241.6) scale(1.619)" fill="none" stroke="#8a97a8" stroke-width="4" stroke-linejoin="round">
+<rect x="-34" y="-26" width="68" height="52" rx="5"/>
+<circle cx="-14" cy="-9" r="6"/>
+<path d="M-34 18 L-8 -3 L10 13 L21 5 L34 16"/>
+</g>
+<text x="50%" y="322.6" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-size="42.1" font-weight="600" fill="#8a97a8">PLN Energi Gas case study</text>
+<text x="50%" y="377.6" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-size="29.1" fill="#8a97a8">Placeholder · 1078×604</text>
+</svg>
