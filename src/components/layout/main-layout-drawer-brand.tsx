@@ -3,26 +3,26 @@ import Image from "next/image";
 
 export default function MainLayoutDrawerBrand() {
   return (
-    <Box
-      sx={{
-        height: 100,
-        width: "100%",
-        display: "flex",
-        alignItems: "center",
-      }}
-    >
-      <Stack direction="row" alignItems="flex-end" px={2}>
-        <Image src="/logo.png" alt="" width={50} height={50} />
-        <Typography
-          sx={{ ml: 2 }}
-          fontWeight={600}
-          color="#5CBDD7"
-          fontSize="24px"
-          lineHeight="24px"
-        >
+    <Stack direction="row" alignItems="center" spacing={1.5} sx={{ position: "relative", px: 3, py: 3.5 }}>
+      <Box
+        sx={{
+          display: "flex",
+          p: 0.75,
+          borderRadius: 2,
+          bgcolor: "white",
+          boxShadow: "0 8px 20px -8px rgba(0,0,0,.5)",
+        }}
+      >
+        <Image src="/logo.png" alt="" width={32} height={32} />
+      </Box>
+      <Box>
+        <Typography fontWeight={700} fontSize={18} lineHeight="22px" color="white">
           Rekadia
         </Typography>
-      </Stack>
-    </Box>
+        <Typography fontSize={12} lineHeight="16px" fontWeight={600} letterSpacing={1.5} color="#25c1da">
+          CMS
+        </Typography>
+      </Box>
+    </Stack>
   );
 }

@@ -1,11 +1,13 @@
 import { MainLayoutHeader } from "@/components/layout";
 import { Box } from "@mui/material";
+import CmsCollectionList from "@/features/dashboard/components/cms-collection-list";
+import CmsOverviewHero from "@/features/dashboard/components/cms-overview-hero";
 
 export default async function DashboardPage() {
   return (
     <Box>
       <MainLayoutHeader
-        title="Dashboard"
+        title="Collections"
         breadcrumbs={[
           {
             href: '/dashboard',
@@ -13,6 +15,8 @@ export default async function DashboardPage() {
           }
         ]}
       />
+      <CmsOverviewHero />
+      <CmsCollectionList />
     </Box>
   );
 }

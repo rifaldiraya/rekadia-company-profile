@@ -1,5 +1,5 @@
 import { LogoutRounded } from "@mui/icons-material";
-import { Avatar, Box, IconButton, Typography, Link } from "@mui/material";
+import { Avatar, Box, IconButton, Link, Tooltip, Typography } from "@mui/material";
 import NextLink from "next/link";
 import { useSignOutModalStore } from "./store/use-sign-out-modal-store";
 
@@ -7,41 +7,62 @@ interface MainLayoutDrawerAccountProps {
   name: string;
   email: string;
   username: string;
+  role?: string;
 }
+
+const initialsOf = (name: string) =>
+  name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
 
 export default function MainLayoutDrawerAccount({
   name,
   email,
   username,
+  role,
 }: MainLayoutDrawerAccountProps) {
   const { openModal } = useSignOutModalStore();
 
   return (
     <Box
-      mb={2}
-      display="flex"
       sx={{
-        px: 1,
+        display: "flex",
         alignItems: "center",
-        gap: 1,
+        gap: 1.25,
+        p: 1.25,
+        borderRadius: 3,
+        bgcolor: "rgba(255,255,255,.08)",
+        border: "1px solid rgba(255,255,255,.14)",
+        backdropFilter: "blur(10px)",
       }}
     >
-      <Avatar sx={{ width: 34, height: 34 }} />
-      <Box sx={{ width: 166 }}>
+      <Avatar
+        sx={{
+          width: 38,
+          height: 38,
+          fontSize: 14,
+          fontWeight: 700,
+          color: "#063646",
+          background: "linear-gradient(135deg, #c4f3ff, #25c1da)",
+        }}
+      >
+        {initialsOf(name)}
+      </Avatar>
+      <Box sx={{ flex: 1, minWidth: 0 }}>
         <Link
           component={NextLink}
           href={`/profile/${username}`}
-          sx={{
-            textDecoration: "none",
-            color: "black",
-            "&:hover": {
-              textDecoration: "underline",
-            },
-          }}
+          underline="hover"
+          display="block"
           whiteSpace="nowrap"
           textOverflow="ellipsis"
           overflow="hidden"
+          fontSize={14}
           fontWeight={600}
+          color="white"
         >
           {name}
         </Link>
@@ -49,15 +70,23 @@ export default function MainLayoutDrawerAccount({
           whiteSpace="nowrap"
           textOverflow="ellipsis"
           overflow="hidden"
-          color="GrayText"
-          fontSize="small"
+          fontSize={12}
+          color="rgba(255,255,255,.65)"
+          title={email}
         >
-          {email}
+          {role ? `${role} · ${email}` : email}
         </Typography>
       </Box>
-      <IconButton size="small" onClick={openModal}>
-        <LogoutRounded />
-      </IconButton>
+      <Tooltip title="Sign out">
+        <IconButton
+          size="small"
+          aria-label="Sign out"
+          onClick={openModal}
+          sx={{ color: "rgba(255,255,255,.8)", "&:hover": { color: "white", bgcolor: "rgba(255,255,255,.12)" } }}
+        >
+          <LogoutRounded fontSize="small" />
+        </IconButton>
+      </Tooltip>
     </Box>
   );
 }

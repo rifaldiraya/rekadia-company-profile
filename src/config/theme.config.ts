@@ -38,6 +38,16 @@ export const themeConfig: Theme = createTheme({
     },
   },
   palette: {
+    primary: {
+      main: "#006876",
+      light: "#00c2dc",
+      dark: "#004c56",
+      contrastText: "#ffffff",
+    },
+    secondary: {
+      main: "#25c1da",
+      contrastText: "#ffffff",
+    },
     background: {
       default: "rgba(255,255,255)",
       paper: "white",

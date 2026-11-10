@@ -6,7 +6,7 @@ export const BASE_URL =
 export const JWT_COOKIE = "jwt";
 
 export const BRAND_NAME = "Rekadia";
-export const APP_NAME = "Rekadia";
+export const APP_NAME = "Rekadia CMS";
 
 export const THEME_BORDER_RADIUS = 10;
 export const MUI_LICENSE = process.env.NEXT_PUBLIC_MUI_LICENSE ?? "";

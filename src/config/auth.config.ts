@@ -1,24 +1,18 @@
 /* eslint-disable no-param-reassign */
-import { BASE_URL, NEXTAUTH_SECRET, SUPER_ADMIN } from "@/constants";
-import { AuthOptions } from "next-auth";
+import { NEXTAUTH_SECRET, SUPER_ADMIN } from "@/constants";
+import { AuthOptions, User } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import jwt from "jsonwebtoken";
-import axios from "axios";
 import { accessControl } from "@/config/access-control.config";
-
-interface ISignIn {
-  token: string;
-  refreshToken: string;
-}
+import { findDemoAccount } from "@/features/sign-in/data/demo-accounts";
 
 const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
       name: "credentials",
       credentials: {
-        email: {
-          label: "Email",
-          type: "email",
+        emailOrUserName: {
+          label: "Email or username",
+          type: "text",
         },
         password: {
           label: "Password",
@@ -26,40 +20,25 @@ const authOptions: AuthOptions = {
         },
       },
       authorize: async (credentials) => {
-        try {
-          const data = await axios.post<ISignIn>(
-            `${BASE_URL}/account/login`,
-            credentials,
-            {
-              headers: {
-                "Content-Type": "application/json",
-              },
-            },
-          );
+        const account = findDemoAccount(credentials?.emailOrUserName ?? "", credentials?.password ?? "");
+        if (!account) return null;
 
-          const decoded = (await jwt.decode(data.data.token)) as any;
+        const permissions =
+          account.role === SUPER_ADMIN
+            ? accessControl.map((item) => ({ type: item.name, values: item.actions }))
+            : [];
 
-          let permissions = decoded.permission;
-
-          if (decoded.role.includes(SUPER_ADMIN)) {
-            permissions = accessControl.map((item) => ({
-              type: item.name,
-              values: item.actions,
-            }));
-          }
-
-          const user = {
-            ...decoded,
-            permissions,
-            roles: decoded.role,
-            accessToken: data.data.token,
-            refreshToken: data.data.refreshToken,
-          };
-
-          return user;
-        } catch (e) {
-          return null;
-        }
+        return {
+          id: account.id,
+          username: account.username,
+          name: account.name,
+          email: account.email,
+          photo: "",
+          roles: [account.role],
+          permissions,
+          accessToken: `demo-token-${account.id}`,
+          refreshToken: `demo-refresh-${account.id}`,
+        } as User;
       },
     }),
   ],

@@ -21,6 +21,40 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
+const withoutTrailingSlash = (path: string) => (path.length > 1 ? path.replace(/\/$/, "") : path);
+
+/** Top-level routes such as `/dashboard` match exactly; deeper routes also match their sub-pages. */
+const matchesRoute = (route: string | undefined, pathname: string) =>
+  !!route && (route === pathname || (route.split("/").length > 2 && pathname.startsWith(`${route}/`)));
+
+const menuButtonSx = (isActive: boolean) => ({
+  position: "relative",
+  mb: 0.5,
+  borderRadius: 2.5,
+  p: "10px 12px",
+  overflow: "hidden",
+  backgroundColor: isActive ? "rgba(255,255,255,.14)" : "transparent",
+  boxShadow: isActive ? "inset 0 0 0 1px rgba(255,255,255,.16)" : "none",
+  transition: "background-color 200ms ease",
+  "&::before": {
+    content: '""',
+    position: "absolute",
+    left: 0,
+    top: 10,
+    bottom: 10,
+    width: 3,
+    borderRadius: 3,
+    backgroundColor: "#25c1da",
+    transform: isActive ? "scaleY(1)" : "scaleY(0)",
+    transition: "transform 200ms ease",
+  },
+  ":hover": {
+    backgroundColor: "rgba(255,255,255,.1)",
+    ".MuiTypography-root, .MuiListItemIcon-root": { color: "white" },
+  },
+  "> .MuiSvgIcon-root": { color: "rgba(255,255,255,.75)" },
+} as const);
+
 export interface MainLayoutDrawerMenuItemProps {
   menu: IMenuConfig;
   level: number;
@@ -39,17 +73,17 @@ export function MainLayoutDrawerMenuItem({
 }: MainLayoutDrawerMenuItemProps) {
   const [isExpand, setIsExpand] = useState<boolean>(false);
 
-  const pathname = usePathname();
+  const pathname = withoutTrailingSlash(usePathname());
 
   const expandList = () => setIsExpand((prev) => !prev);
   const isSubmenu =
     menu.subMenu && Array.isArray(menu.subMenu) && !!menu.subMenu.length;
 
-  const isActive = menu.route === pathname;
+  const isActive = matchesRoute(menu.route, pathname);
 
   const hasChildActive = useMemo(() => {
     function hasRoute(obj: IMenuConfig) {
-      if (obj.route === pathname) {
+      if (matchesRoute(obj.route, pathname)) {
         return true;
       }
 
@@ -70,20 +104,12 @@ export function MainLayoutDrawerMenuItem({
   const renderDropdownItem = () => (
     <ListItemButton
       onClick={expandList}
-      sx={{
-        borderRadius: (theme) => `${theme.shape.borderRadius}px`,
-        p: "8px 12px",
-        backgroundColor: ({ color }) => isActive ? color.accent[400] : "transparent",
-        ":hover": {
-          backgroundColor: ({ color }) => color.accent[400],
-          '.MuiTypography-root': {
-            color: 'white'
-          }
-        }
-      }}
+      sx={menuButtonSx(isActive)}
     >
       {!level ? (
-        <ListItemIcon>{menu.icon({ isActive })}</ListItemIcon>
+        <ListItemIcon sx={{ minWidth: 40, color: isActive ? "#25c1da" : "rgba(255,255,255,.75)" }}>
+          {menu.icon({ isActive })}
+        </ListItemIcon>
       ) : level === 1 ? (
         <ListItemIcon>
           <Box
@@ -92,7 +118,7 @@ export function MainLayoutDrawerMenuItem({
             width={5}
             height={5}
             sx={{
-              backgroundColor: ({ palette }) => palette.grey[800],
+              backgroundColor: "rgba(255,255,255,.6)",
             }}
           />
         </ListItemIcon>
@@ -102,7 +128,8 @@ export function MainLayoutDrawerMenuItem({
           ".MuiTypography-root": {
             fontWeight: 600,
             pl: !level || level === 1 ? 0 : 4.5,
-            color: ({ color }) => isActive ? 'white' : color.bmw[500],
+            fontSize: 14,
+            color: isActive ? "white" : "rgba(255,255,255,.75)",
           },
         }}
         primary={menu.label ?? ""}
@@ -116,20 +143,12 @@ export function MainLayoutDrawerMenuItem({
       onClick={expandList}
       LinkComponent={Link}
       href={menu.route!}
-      sx={{
-        borderRadius: (theme) => `${theme.shape.borderRadius}px`,
-        p: "8px 12px",
-        backgroundColor: ({ color }) => isActive ? color.accent[400] : "transparent",
-        ":hover": {
-          backgroundColor: ({ color }) => color.accent[400],
-          '.MuiTypography-root': {
-            color: 'white'
-          }
-        }
-      }}
+      sx={menuButtonSx(isActive)}
     >
       {!level ? (
-        <ListItemIcon>{menu.icon({ isActive })}</ListItemIcon>
+        <ListItemIcon sx={{ minWidth: 40, color: isActive ? "#25c1da" : "rgba(255,255,255,.75)" }}>
+          {menu.icon({ isActive })}
+        </ListItemIcon>
       ) : level === 1 ? (
         <ListItemIcon>
           <Box
@@ -138,7 +157,7 @@ export function MainLayoutDrawerMenuItem({
             width={5}
             height={5}
             sx={{
-              backgroundColor: ({ palette }) => palette.grey[800],
+              backgroundColor: "rgba(255,255,255,.6)",
             }}
           />
         </ListItemIcon>
@@ -148,7 +167,8 @@ export function MainLayoutDrawerMenuItem({
           ".MuiTypography-root": {
             fontWeight: 600,
             pl: !level || level === 1 ? 0 : 4.5,
-            color: ({ color }) => isActive ? 'white' : color.bmw[500]
+            fontSize: 14,
+            color: isActive ? "white" : "rgba(255,255,255,.75)",
           },
         }}
         primary={menu.label}
