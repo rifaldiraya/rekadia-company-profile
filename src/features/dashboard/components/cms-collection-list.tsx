@@ -2,7 +2,6 @@
 
 import { useMemo, useState, type ComponentType } from "react";
 import NextLink from "next/link";
-import { enqueueSnackbar } from "notistack";
 import {
   Box,
   Button,
@@ -12,6 +11,7 @@ import {
   InputAdornment,
   MenuItem,
   Paper,
+  Skeleton,
   Stack,
   TextField,
   ToggleButton,
@@ -25,23 +25,22 @@ import {
   ArticleOutlined,
   CategoryOutlined,
   CloseRounded,
+  CloudOffRounded,
   DesignServicesOutlined,
   FactoryOutlined,
   FormatQuoteRounded,
   GridViewRounded,
   LocalOfferOutlined,
   PeopleAltOutlined,
-  RestartAltRounded,
   SearchOffRounded,
   SearchRounded,
   TaskAltOutlined,
   ViewListRounded,
   WorkOutline,
 } from "@mui/icons-material";
-import useDialog from "@/hook/use-dialog";
 import { CMS_COLLECTION_GROUPS, type CmsCollectionGroup } from "@/features/dashboard/data/cms-collections";
 import { CMS_ROUTES, getCmsResource } from "@/features/cms/config/cms-resources";
-import { useCmsCollections, useResetCmsData } from "@/features/cms/hook/use-cms";
+import { useCmsCollections } from "@/features/cms/hook/use-cms";
 import type { CmsCollectionSummary as CmsCollection } from "@/features/cms/types/cms";
 
 type SortKey = "default" | "name" | "items";
@@ -233,10 +232,10 @@ function CollectionRow({ collection, index, max }: { collection: CmsCollection; 
   );
 }
 
+const NO_COLLECTIONS: CmsCollection[] = [];
+
 export default function CmsCollectionList() {
-  const { data: allCollections } = useCmsCollections();
-  const resetData = useResetCmsData();
-  const { openDialog, closeDialog } = useDialog();
+  const { data: allCollections = NO_COLLECTIONS, isPending, isError, refetch } = useCmsCollections();
   const [query, setQuery] = useState("");
   const [group, setGroup] = useState<CmsCollectionGroup | "All">("All");
   const [sort, setSort] = useState<SortKey>("default");
@@ -258,20 +257,6 @@ export default function CmsCollectionList() {
       ) as Record<CmsCollectionGroup, number>,
     [allCollections],
   );
-
-  const confirmReset = () =>
-    openDialog({
-      title: "Reset dummy data?",
-      supportText: "Every change you made in this browser will be replaced with the original dummy content.",
-      severity: "warning",
-      confirmText: "Reset",
-      cancelText: "Cancel",
-      onConfirm: async () => {
-        await resetData.mutateAsync();
-        enqueueSnackbar("Dummy data restored.", { variant: "success" });
-        closeDialog();
-      },
-    });
 
   const resetFilters = () => {
     setQuery("");
@@ -376,7 +361,20 @@ export default function CmsCollectionList() {
         Showing {collections.length} of {allCollections.length} collections
       </Typography>
 
-      {collections.length === 0 ? (
+      {isPending ? (
+        <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0,1fr))", lg: "repeat(3, minmax(0,1fr))" } }}>
+          {[0, 1, 2].map((index) => (
+            <Skeleton key={index} variant="rounded" height={150} sx={{ borderRadius: 4 }} />
+          ))}
+        </Box>
+      ) : isError ? (
+        <Paper elevation={0} sx={{ py: 7, px: 3, textAlign: "center", borderRadius: 4, border: "1px dashed #cfdbe2" }}>
+          <CloudOffRounded sx={{ fontSize: 40, color: "#b0bac9" }} />
+          <Typography sx={{ mt: 1, fontSize: 16, fontWeight: 700, color: "#22272f" }}>Collections could not be loaded</Typography>
+          <Typography sx={{ fontSize: 14, color: "#667991", mb: 2 }}>Check your connection to the CMS API and try again.</Typography>
+          <Chip label="Try again" onClick={() => refetch()} color="primary" sx={{ fontWeight: 600 }} />
+        </Paper>
+      ) : collections.length === 0 ? (
         <Paper elevation={0} sx={{ py: 7, px: 3, textAlign: "center", borderRadius: 4, border: "1px dashed #cfdbe2" }}>
           <SearchOffRounded sx={{ fontSize: 40, color: "#b0bac9" }} />
           <Typography sx={{ mt: 1, fontSize: 16, fontWeight: 700, color: "#22272f" }}>No collections found</Typography>
@@ -403,11 +401,6 @@ export default function CmsCollectionList() {
           ))}
         </Stack>
       )}
-      <Stack direction="row" justifyContent="flex-end" sx={{ mt: 3 }}>
-        <Button size="small" color="inherit" startIcon={<RestartAltRounded />} onClick={confirmReset} sx={{ color: "#8595ab" }}>
-          Reset dummy data
-        </Button>
-      </Stack>
     </Box>
   );
 }

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import Image from "next/image";
 import { Box, Stack, Typography, keyframes } from "@mui/material";
-import { CMS_COLLECTIONS, CMS_TOTAL_ITEMS } from "@/features/dashboard/data/cms-collections";
+import { CMS_COLLECTIONS, CMS_COLLECTION_GROUPS } from "@/features/dashboard/data/cms-collections";
 import { usePrefersReducedMotion } from "@/hook/use-prefers-reduced-motion";
 
 const PREVIEW = ["News", "Case Studies", "Clients", "Industries", "Careers"]
@@ -151,7 +151,7 @@ export default function SignInShowcase() {
               {CMS_COLLECTIONS.length} collections
             </Typography>
             <Typography fontSize={13} sx={{ color: "rgba(255,255,255,.7)" }}>
-              {CMS_TOTAL_ITEMS} items
+              {CMS_COLLECTION_GROUPS.length} groups
             </Typography>
           </Stack>
           <Stack component="ul" spacing={0.75} sx={{ listStyle: "none", m: 0, p: 0 }}>
@@ -190,7 +190,7 @@ export default function SignInShowcase() {
                       transition: "background-color 300ms ease",
                     }}
                   >
-                    {collection.itemCount}
+                    {collection.group}
                   </Box>
                 </Box>
               );

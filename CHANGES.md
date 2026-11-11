@@ -3,6 +3,8 @@
 ## [Unreleased]
 
 ### Added
+- [feat] cms: sign in through the backend `POST /account/login` and refresh the access token before it expires (2ac784d)
+- [feat] cms: read and write collections, items, and media through the backend `/cms/*` API (2ac784d)
 - [docs] api: add the CMS API contract for the backend team (1845ce8)
 - [feat] cms: add list and create/edit pages for 9 CMS collections backed by dummy data in the browser (1845ce8)
 - [feat] cms: add a Collections submenu to the sidebar and link the dashboard cards to each collection (1845ce8)
@@ -26,11 +28,14 @@
 - [docs] assets: document every placeholder image and its original Webflow file (486e140)
 
 ### Changed
+- [chore] api: point `NEXT_PUBLIC_API_BASE_URL` and `NEXT_PUBLIC_BASE_URL` to the development API (2ac784d)
+- [refactor] cms: remove the in-browser dummy data, demo accounts, and the reset dummy data action (2ac784d)
 - [style] admin: restyle the CMS sidebar, header, and page background to match the sign-in page and company profile (1845ce8)
 - [style] admin: use the company profile colours for the admin theme and brand the drawer as Rekadia CMS (1845ce8)
 - [refactor] delva: share the case study cards with the Case Study page (486e140)
 
 ### Fixed
+- [fix] admin: show ProblemDetails validation errors in the shared HTTP client instead of crashing (2ac784d)
 - [fix] admin: highlight the active sidebar item when the URL has a trailing slash (1845ce8)
 - [fix] auth: read the session token in middleware with the same secret used to sign it (1845ce8)
 - [fix] contact-us: match the form position at 375px and the column widths from 1280px up (486e140)

@@ -26,7 +26,7 @@ import CmsFieldInput from "@/features/cms/components/cms-field-input";
 import CmsStatusChip from "@/features/cms/components/cms-status-chip";
 import { CMS_CARD_SX, CMS_GRADIENT_BUTTON_SX, CMS_INPUT_SX } from "@/features/cms/components/cms-styles";
 import { CMS_ROUTES, getCmsResource } from "@/features/cms/config/cms-resources";
-import { slugify } from "@/features/cms/data/cms-seed";
+import { slugify } from "@/features/cms/utils/slugify";
 import { useCmsCollections, useCmsItem, useDeleteCmsItem, useSaveCmsItem } from "@/features/cms/hook/use-cms";
 import { buildCmsSchema } from "@/features/cms/schema/build-cms-schema";
 import type { CmsField, CmsFieldValue, CmsItem, CmsItemInput, CmsResource } from "@/features/cms/types/cms";
@@ -56,7 +56,7 @@ function CmsItemForm({ resource, item }: { resource: CmsResource; item?: CmsItem
   const remove = useDeleteCmsItem(resource.slug);
   const isEdit = !!item;
 
-  const nextOrder = (collections.find((entry) => entry.slug === resource.slug)?.itemCount ?? 0) + 1;
+  const nextOrder = (collections?.find((entry) => entry.slug === resource.slug)?.itemCount ?? 0) + 1;
   const schema = useMemo(() => buildCmsSchema(resource), [resource]);
   const defaultValues = useMemo(() => buildDefaults(resource, item, nextOrder), [resource, item, nextOrder]);
 
@@ -98,10 +98,15 @@ function CmsItemForm({ resource, item }: { resource: CmsResource; item?: CmsItem
       enqueueSnackbar(`"${String(saved[resource.titleField] ?? resource.singular)}" saved.`, { variant: "success" });
       router.push(CMS_ROUTES.list(resource.slug));
     } catch (error) {
+      const otherMessages: string[] = [];
       if (isApiError(error)) {
-        Object.entries(error.fieldErrors).forEach(([name, messages]) => setError(name, { message: messages[0] }));
+        Object.entries(error.fieldErrors).forEach(([name, messages]) => {
+          if (name in input) setError(name, { message: messages[0] });
+          else otherMessages.push(...messages);
+        });
       }
-      enqueueSnackbar(getErrorMessage(error), { variant: "error" });
+      const detail = otherMessages.length > 0 ? `: ${otherMessages.join(" ")}` : "";
+      enqueueSnackbar(`${getErrorMessage(error)}${detail}`, { variant: "error" });
     }
   };
 
@@ -216,7 +221,9 @@ function CmsItemForm({ resource, item }: { resource: CmsResource; item?: CmsItem
                 <Divider sx={{ my: 2 }} />
                 <Stack spacing={0.5} sx={{ fontSize: 13, color: "#667991" }}>
                   <span>Created {formatDateTime(item.createdAt)} by {item.createdBy}</span>
-                  <span>Updated {formatDateTime(item.updatedAt)} by {item.updatedBy}</span>
+                  {item.updatedAt && (
+                    <span>Updated {formatDateTime(item.updatedAt)} by {item.updatedBy}</span>
+                  )}
                 </Stack>
               </>
             )}

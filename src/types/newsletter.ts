@@ -1,4 +1,4 @@
-/** Proposed payload for `POST /api/newsletter` (to be confirmed with the backend team). */
+/** Payload for `POST /newsletter` (backend Swagger: `SubscribeNewsletterRequest`). */
 export interface NewsletterRequest {
   email: string;
   language: "en" | "id";

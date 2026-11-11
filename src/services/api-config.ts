@@ -1,13 +1,22 @@
-export const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5000/api").replace(
+export const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://dev.rkdweb.apps-dev.rekadia.co.id").replace(
   /\/+$/,
   "",
 );
 
-/** Proposed endpoints, relative to API_BASE_URL. Adjust here once the .NET API is finalised. */
+/** Endpoints relative to API_BASE_URL, as documented in the backend Swagger (`/swagger/index.html`). */
 export const API_ENDPOINTS = {
   contact: "/contact",
   newsletter: "/newsletter",
+  login: "/account/login",
+  refreshToken: "/account/refresh-token",
+  logout: "/account/logout",
+  cmsCollections: "/cms/collections",
+  cmsMedia: "/cms/media",
+  cmsResource: (resource: string) => `/cms/${resource}`,
 } as const;
+
+/** Largest `pageSize` the API accepts. */
+export const API_MAX_PAGE_SIZE = 100;
 
 export const API_TIMEOUT_MS = 15_000;
 

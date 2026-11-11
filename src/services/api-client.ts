@@ -45,6 +45,8 @@ export async function apiRequest<TData, TBody = unknown>(
   const abortFromCaller = () => controller.abort(signal?.reason);
   signal?.addEventListener("abort", abortFromCaller, { once: true });
 
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+
   let response: Response;
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
@@ -52,10 +54,10 @@ export async function apiRequest<TData, TBody = unknown>(
       signal: controller.signal,
       headers: {
         Accept: "application/json",
-        ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+        ...(body !== undefined && !isFormData ? { "Content-Type": "application/json" } : {}),
         ...headers,
       },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: isFormData ? body : body !== undefined ? JSON.stringify(body) : undefined,
     });
   } catch (error) {
     if (controller.signal.aborted && !signal?.aborted) {

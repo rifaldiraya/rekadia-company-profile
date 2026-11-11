@@ -4,9 +4,9 @@
 > Frontend: Next.js (`RKD.COMPRO`) · Backend: ASP.NET Core
 > Scope: CMS admin login, CMS content management, public content for the website (rekadia.co.id), contact form, and newsletter.
 >
-> Frontend status: the CMS pages under `/dashboard/collections/*` already follow this contract, but
-> they currently read and write **dummy data** stored in the browser (`src/features/cms/services/cms-mock-db.ts`).
-> Once the endpoints below are ready, only `src/features/cms/services/cms-api.ts` needs to switch to `httpClient`.
+> Frontend status: CMS login and the pages under `/dashboard/collections/*` call the development API
+> (`src/config/auth.config.ts`, `src/features/cms/services/cms-api.ts`).
+> Swagger: https://dev.rkdweb.apps-dev.rekadia.co.id/swagger/index.html
 
 ---
 
@@ -14,7 +14,7 @@
 
 | Item | Value |
 | --- | --- |
-| Base URL | `{API_BASE_URL}`, e.g. `https://api.rekadia.co.id/api` (frontend: `NEXT_PUBLIC_API_BASE_URL`) |
+| Base URL | `{API_BASE_URL}`, development: `https://dev.rkdweb.apps-dev.rekadia.co.id` (frontend: `NEXT_PUBLIC_API_BASE_URL`) |
 | Format | JSON, `Content-Type: application/json` (except media upload: `multipart/form-data`) |
 | Property naming | `camelCase` |
 | Dates | ISO 8601 UTC, e.g. `2026-11-10T07:00:00Z`; date-only fields use `YYYY-MM-DD` |

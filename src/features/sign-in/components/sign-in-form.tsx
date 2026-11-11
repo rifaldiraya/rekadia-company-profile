@@ -9,7 +9,6 @@ import {
   Alert,
   Box,
   Button,
-  ButtonBase,
   IconButton,
   InputAdornment,
   Link,
@@ -19,11 +18,8 @@ import {
   keyframes,
 } from "@mui/material";
 import {
-  AdminPanelSettingsOutlined,
   ArrowBackRounded,
   ArrowForwardRounded,
-  CheckCircleRounded,
-  EditNoteRounded,
   KeyboardCapslockRounded,
   LockOutlined,
   PersonOutlineRounded,
@@ -32,7 +28,6 @@ import {
 } from "@mui/icons-material";
 import useSignIn from "@/features/sign-in/hook/use-sign-in";
 import { SignInSchema, signInSchema } from "@/features/sign-in/schema/sign-in-schema";
-import { DEMO_ACCOUNTS, type DemoAccount } from "@/features/sign-in/data/demo-accounts";
 import { ROUTES } from "@/config/route";
 
 const shake = keyframes`
@@ -54,11 +49,6 @@ const fieldSx = {
   },
 };
 
-const ACCOUNT_ICONS: Record<DemoAccount["role"], typeof AdminPanelSettingsOutlined> = {
-  Superadmin: AdminPanelSettingsOutlined,
-  Editor: EditNoteRounded,
-};
-
 export default function SignInForm() {
   const router = useRouter();
   const signIn = useSignIn();
@@ -66,9 +56,8 @@ export default function SignInForm() {
   const [error, setError] = useState<{ message: string; attempt: number } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [capsLock, setCapsLock] = useState(false);
-  const [selectedDemo, setSelectedDemo] = useState<string | null>(null);
 
-  const { control, handleSubmit, setValue, clearErrors } = useForm<SignInSchema>({
+  const { control, handleSubmit } = useForm<SignInSchema>({
     defaultValues: { emailOrUserName: "", password: "" },
     resolver: yupResolver(signInSchema),
   });
@@ -84,14 +73,6 @@ export default function SignInForm() {
     }
     setLoading(false);
     setError((previous) => ({ message: result.message, attempt: (previous?.attempt ?? 0) + 1 }));
-  };
-
-  const fillDemoAccount = (account: DemoAccount) => {
-    setValue("emailOrUserName", account.email);
-    setValue("password", account.password);
-    clearErrors();
-    setError(null);
-    setSelectedDemo(account.id);
   };
 
   const trackCapsLock = (event: KeyboardEvent) => setCapsLock(event.getModifierState("CapsLock"));
@@ -143,12 +124,8 @@ export default function SignInForm() {
           render={({ field, fieldState }) => (
             <TextField
               {...field}
-              onChange={(event) => {
-                field.onChange(event);
-                setSelectedDemo(null);
-              }}
               label="Email or username"
-              placeholder="admin@rekadia.co.id"
+              placeholder="name@rekadia.co.id"
               autoComplete="username"
               autoFocus
               error={!!fieldState.error}
@@ -173,10 +150,6 @@ export default function SignInForm() {
           render={({ field, fieldState }) => (
             <TextField
               {...field}
-              onChange={(event) => {
-                field.onChange(event);
-                setSelectedDemo(null);
-              }}
               onKeyUp={trackCapsLock}
               onKeyDown={trackCapsLock}
               label="Password"
@@ -244,60 +217,6 @@ export default function SignInForm() {
         </Button>
       </Stack>
 
-      <Box sx={{ mt: 4 }}>
-        <Typography sx={{ fontSize: 13, fontWeight: 600, color: "#667991", mb: 1.5 }}>
-          Demo accounts (dummy data)
-        </Typography>
-        <Stack spacing={1.25}>
-          {DEMO_ACCOUNTS.map((account) => {
-            const Icon = ACCOUNT_ICONS[account.role];
-            const selected = selectedDemo === account.id;
-            return (
-              <ButtonBase
-                key={account.id}
-                onClick={() => fillDemoAccount(account)}
-                aria-pressed={selected}
-                sx={{
-                  justifyContent: "flex-start",
-                  gap: 1.5,
-                  p: 1.5,
-                  borderRadius: 2.5,
-                  textAlign: "left",
-                  border: "1px solid",
-                  borderColor: selected ? "#25c1da" : "#eceef2",
-                  bgcolor: selected ? "rgba(37,193,218,.08)" : "white",
-                  transition: "border-color 200ms ease, background-color 200ms ease",
-                  "&:hover": { borderColor: "#25c1da" },
-                  "&.Mui-focusVisible": { outline: "2px solid #25c1da", outlineOffset: 2 },
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    p: 1,
-                    borderRadius: 2,
-                    color: "primary.main",
-                    bgcolor: "rgba(0,194,220,.12)",
-                  }}
-                >
-                  <Icon fontSize="small" />
-                </Box>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography sx={{ fontSize: 14, fontWeight: 600, color: "#22272f" }}>
-                    {account.role} · {account.email}
-                  </Typography>
-                  <Typography sx={{ fontSize: 12, color: "#667991" }}>{account.description}</Typography>
-                </Box>
-                {selected ? (
-                  <CheckCircleRounded sx={{ color: "#25c1da" }} />
-                ) : (
-                  <Typography sx={{ fontSize: 12, fontWeight: 600, color: "primary.main" }}>Use</Typography>
-                )}
-              </ButtonBase>
-            );
-          })}
-        </Stack>
-      </Box>
     </Box>
   );
 }

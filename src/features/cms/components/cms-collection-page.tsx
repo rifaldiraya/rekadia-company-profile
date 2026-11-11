@@ -402,8 +402,8 @@ export default function CmsCollectionPage({ resourceSlug }: { resourceSlug: stri
                           <CmsStatusChip status={item.status} />
                         </TableCell>
                         <TableCell sx={{ whiteSpace: "nowrap", fontSize: 13, color: "#667991" }}>
-                          {formatDate(item.updatedAt)}
-                          <Typography sx={{ fontSize: 12, color: "#8595ab" }}>by {item.updatedBy}</Typography>
+                          {formatDate(item.updatedAt ?? item.createdAt)}
+                          <Typography sx={{ fontSize: 12, color: "#8595ab" }}>by {item.updatedBy || item.createdBy}</Typography>
                         </TableCell>
                         <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
                           <Tooltip title="Edit">

@@ -29,6 +29,7 @@ interface CmsMediaPickerProps {
 }
 
 const ACCEPT = "image/png,image/jpeg,image/webp,image/svg+xml";
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
 export default function CmsMediaPicker({ open, value, onClose, onSelect }: CmsMediaPickerProps) {
   const { data: media = [], isLoading } = useCmsMedia();
@@ -47,6 +48,10 @@ export default function CmsMediaPicker({ open, value, onClose, onSelect }: CmsMe
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
+    if (file.size > MAX_UPLOAD_BYTES) {
+      enqueueSnackbar("The image is larger than 5 MB.", { variant: "error" });
+      return;
+    }
     try {
       const created = await upload.mutateAsync({ file, alt: file.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ") });
       setSelected(created.id);
@@ -101,7 +106,7 @@ export default function CmsMediaPicker({ open, value, onClose, onSelect }: CmsMe
           <input ref={fileRef} type="file" accept={ACCEPT} hidden onChange={handleUpload} />
         </Stack>
         <Typography sx={{ fontSize: 12, color: "#8595ab", mb: 1.5 }}>
-          PNG, JPG, WEBP or SVG. Dummy uploads are stored in this browser only (max 1 MB).
+          PNG, JPG, WEBP or SVG, max 5 MB.
         </Typography>
 
         {isLoading ? (

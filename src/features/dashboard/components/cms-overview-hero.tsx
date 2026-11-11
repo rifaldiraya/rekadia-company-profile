@@ -8,6 +8,7 @@ import { ArrowDownwardRounded, OpenInNewRounded } from "@mui/icons-material";
 import { CMS_COLLECTION_GROUPS } from "@/features/dashboard/data/cms-collections";
 import { CMS_ROUTES } from "@/features/cms/config/cms-resources";
 import { useCmsCollections } from "@/features/cms/hook/use-cms";
+import type { CmsCollectionSummary } from "@/features/cms/types/cms";
 import { usePrefersReducedMotion } from "@/hook/use-prefers-reduced-motion";
 
 const REDUCED_MOTION = "@media (prefers-reduced-motion: reduce)";
@@ -76,10 +77,12 @@ function Stat({ label, value, animate }: { label: string; value: number; animate
   );
 }
 
+const NO_COLLECTIONS: CmsCollectionSummary[] = [];
+
 export default function CmsOverviewHero() {
   const { data: session } = useSession();
   const reducedMotion = usePrefersReducedMotion();
-  const { data: collections } = useCmsCollections();
+  const { data: collections = NO_COLLECTIONS } = useCmsCollections();
   const totalItems = collections.reduce((total, collection) => total + collection.itemCount, 0);
   const topCollections = useMemo(
     () => [...collections].sort((a, b) => b.itemCount - a.itemCount).slice(0, 5),

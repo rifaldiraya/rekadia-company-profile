@@ -1,55 +1,81 @@
-import { cmsMockDb } from "@/features/cms/services/cms-mock-db";
-import type { CmsItemInput, CmsListParams, CmsMedia, CmsStatus } from "@/features/cms/types/cms";
+import { getSession, signOut } from "next-auth/react";
+import { ROUTES } from "@/config/route";
+import { getCmsResource } from "@/features/cms/config/cms-resources";
+import type {
+  CmsCollectionSummary,
+  CmsFieldType,
+  CmsItem,
+  CmsItemInput,
+  CmsListParams,
+  CmsListResult,
+  CmsMedia,
+  CmsPage,
+  CmsStatus,
+} from "@/features/cms/types/cms";
+import { apiRequest } from "@/services/api-client";
+import { API_ENDPOINTS, API_MAX_PAGE_SIZE } from "@/services/api-config";
+import { isApiError } from "@/services/api-error";
 
-/**
- * CMS service following docs/API_CONTRACT.md. Every call is served by the in-browser
- * dummy database until the ASP.NET Core endpoints are available.
- */
-const MOCK_LATENCY_MS = 250;
+type RequestOptions = NonNullable<Parameters<typeof apiRequest>[1]>;
 
-const respond = <T>(produce: () => T) =>
-  new Promise<T>((resolve, reject) => {
-    setTimeout(() => {
-      try {
-        resolve(produce());
-      } catch (error) {
-        reject(error);
-      }
-    }, MOCK_LATENCY_MS);
+/** Calls the CMS API with the signed-in user's token; an expired session goes back to sign-in. */
+const cmsRequest = async <T>(path: string, options: RequestOptions = {}) => {
+  const session = await getSession();
+  try {
+    return await apiRequest<T>(path, {
+      ...options,
+      headers: session?.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : undefined,
+    });
+  } catch (error) {
+    if (isApiError(error) && error.status === 401) {
+      await signOut({ callbackUrl: ROUTES.SIGN_IN });
+    }
+    throw error;
+  }
+};
+
+const toQuery = ({ filters, ...params }: CmsListParams) => {
+  const query = new URLSearchParams();
+  Object.entries({ ...params, ...filters }).forEach(([key, value]) => {
+    if (value !== undefined && value !== "") query.set(key, String(value));
   });
+  const text = query.toString();
+  return text ? `?${text}` : "";
+};
 
-const readImageSize = (url: string) =>
-  new Promise<{ width: number; height: number }>((resolve) => {
-    const image = new Image();
-    image.onload = () => resolve({ width: image.naturalWidth || 1, height: image.naturalHeight || 1 });
-    image.onerror = () => resolve({ width: 1, height: 1 });
-    image.src = url;
-  });
+/** Optional ids, dates and links must be sent as `null` instead of an empty string. */
+const NULL_WHEN_EMPTY: CmsFieldType[] = ["media", "reference", "date", "url", "email"];
 
-const readAsDataUrl = (file: File) =>
-  new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
+const toPayload = (resource: string, input: CmsItemInput) => {
+  const fields = getCmsResource(resource)?.fields ?? [];
+  return Object.fromEntries(
+    Object.entries(input).map(([name, value]) => {
+      const field = fields.find((item) => item.name === name);
+      return [name, field && NULL_WHEN_EMPTY.includes(field.type) && value === "" ? null : value];
+    }),
+  );
+};
+
+const itemPath = (resource: string, id: string) => `${API_ENDPOINTS.cmsResource(resource)}/${id}`;
 
 export const cmsApi = {
-  collections: () => respond(() => cmsMockDb.collections()),
-  list: (resource: string, params: CmsListParams) => respond(() => cmsMockDb.list(resource, params)),
-  get: (resource: string, id: string) => respond(() => cmsMockDb.get(resource, id)),
-  create: (resource: string, input: CmsItemInput, username: string) =>
-    respond(() => cmsMockDb.create(resource, input, username)),
-  update: (resource: string, id: string, input: CmsItemInput, username: string) =>
-    respond(() => cmsMockDb.update(resource, id, input, username)),
-  setStatus: (resource: string, id: string, status: CmsStatus, username: string) =>
-    respond(() => cmsMockDb.setStatus(resource, id, status, username)),
-  remove: (resource: string, id: string) => respond(() => cmsMockDb.remove(resource, id)),
-  media: () => respond(() => cmsMockDb.media()),
-  async uploadMedia(file: File, alt: string): Promise<CmsMedia> {
-    const url = await readAsDataUrl(file);
-    const { width, height } = await readImageSize(url);
-    return respond(() => cmsMockDb.addMedia({ url, width, height, alt, mimeType: file.type, size: file.size }));
+  collections: () => cmsRequest<CmsCollectionSummary[]>(API_ENDPOINTS.cmsCollections),
+  list: (resource: string, params: CmsListParams) =>
+    cmsRequest<CmsListResult>(`${API_ENDPOINTS.cmsResource(resource)}${toQuery(params)}`),
+  get: (resource: string, id: string) => cmsRequest<CmsItem>(itemPath(resource, id)),
+  create: (resource: string, input: CmsItemInput) =>
+    cmsRequest<CmsItem>(API_ENDPOINTS.cmsResource(resource), { method: "POST", body: toPayload(resource, input) }),
+  update: (resource: string, id: string, input: CmsItemInput) =>
+    cmsRequest<CmsItem>(itemPath(resource, id), { method: "PUT", body: toPayload(resource, input) }),
+  setStatus: (resource: string, id: string, status: CmsStatus) =>
+    cmsRequest<void>(`${itemPath(resource, id)}/status`, { method: "PATCH", body: { status } }),
+  remove: (resource: string, id: string) => cmsRequest<void>(itemPath(resource, id), { method: "DELETE" }),
+  media: async () =>
+    (await cmsRequest<CmsPage<CmsMedia>>(`${API_ENDPOINTS.cmsMedia}?pageSize=${API_MAX_PAGE_SIZE}`)).items,
+  uploadMedia: (file: File, alt: string) => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("alt", alt);
+    return cmsRequest<CmsMedia>(API_ENDPOINTS.cmsMedia, { method: "POST", body: form });
   },
-  reset: () => respond(() => cmsMockDb.reset()),
 };

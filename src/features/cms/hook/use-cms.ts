@@ -1,24 +1,11 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
 import { cmsApi } from "@/features/cms/services/cms-api";
-import { createCmsSeed } from "@/features/cms/data/cms-seed";
-import { CMS_RESOURCES } from "@/features/cms/config/cms-resources";
-import type { CmsCollectionSummary, CmsItemInput, CmsListParams, CmsStatus } from "@/features/cms/types/cms";
+import type { CmsItemInput, CmsListParams, CmsStatus } from "@/features/cms/types/cms";
+import { API_MAX_PAGE_SIZE } from "@/services/api-config";
 
 const CMS_KEY = ["cms"] as const;
 
-const SEED = createCmsSeed();
-
-const SEED_SUMMARY: CmsCollectionSummary[] = CMS_RESOURCES.map((resource) => ({
-  slug: resource.slug,
-  name: resource.name,
-  group: resource.group,
-  itemCount: SEED.items[resource.slug]?.length ?? 0,
-  updatedAt: null,
-}));
-
-export const useCmsCollections = () =>
-  useQuery({ queryKey: [...CMS_KEY, "collections"], queryFn: cmsApi.collections, initialData: SEED_SUMMARY, initialDataUpdatedAt: 0 });
+export const useCmsCollections = () => useQuery({ queryKey: [...CMS_KEY, "collections"], queryFn: cmsApi.collections });
 
 export const useCmsList = (resource: string, params: CmsListParams) =>
   useQuery({
@@ -35,21 +22,16 @@ export const useCmsItem = (resource: string, id: string | undefined) =>
     retry: false,
   });
 
-/** Every item of a resource, for reference pickers and lookups (e.g. news categories). */
+/** Items of a resource for reference pickers and lookups (e.g. news categories). */
 export const useCmsOptions = (resource: string | undefined) =>
   useQuery({
     queryKey: [...CMS_KEY, resource, "options"],
-    queryFn: () => cmsApi.list(resource!, { pageSize: 1000, sort: "order" }),
+    queryFn: () => cmsApi.list(resource!, { pageSize: API_MAX_PAGE_SIZE, sort: "order" }),
     enabled: !!resource,
     select: (result) => result.items,
   });
 
 export const useCmsMedia = () => useQuery({ queryKey: [...CMS_KEY, "media"], queryFn: cmsApi.media });
-
-const useUsername = () => {
-  const { data } = useSession();
-  return data?.user?.username ?? "admin";
-};
 
 const useInvalidateCms = () => {
   const queryClient = useQueryClient();
@@ -57,20 +39,17 @@ const useInvalidateCms = () => {
 };
 
 export const useSaveCmsItem = (resource: string, id?: string) => {
-  const username = useUsername();
   const invalidate = useInvalidateCms();
   return useMutation({
-    mutationFn: (input: CmsItemInput) =>
-      id ? cmsApi.update(resource, id, input, username) : cmsApi.create(resource, input, username),
+    mutationFn: (input: CmsItemInput) => (id ? cmsApi.update(resource, id, input) : cmsApi.create(resource, input)),
     onSuccess: invalidate,
   });
 };
 
 export const useSetCmsStatus = (resource: string) => {
-  const username = useUsername();
   const invalidate = useInvalidateCms();
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: CmsStatus }) => cmsApi.setStatus(resource, id, status, username),
+    mutationFn: ({ id, status }: { id: string; status: CmsStatus }) => cmsApi.setStatus(resource, id, status),
     onSuccess: invalidate,
   });
 };
@@ -86,9 +65,4 @@ export const useUploadCmsMedia = () => {
     mutationFn: ({ file, alt }: { file: File; alt: string }) => cmsApi.uploadMedia(file, alt),
     onSuccess: invalidate,
   });
-};
-
-export const useResetCmsData = () => {
-  const queryClient = useQueryClient();
-  return useMutation({ mutationFn: cmsApi.reset, onSuccess: () => queryClient.resetQueries({ queryKey: CMS_KEY }) });
 };

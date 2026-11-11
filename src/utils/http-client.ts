@@ -31,15 +31,15 @@ const httpClient = () => {
   instance.interceptors.response.use(
     (response) => response,
     (error) => {
-      if (error.response.status === 401) {
+      if (error.response?.status === 401) {
         window.location.href = "/sign-in";
       } else {
-        let errorMessage =
-          error.response.data?.errors?.reduce(
-            (acc: string, curr: any) => `${acc}, ${curr.message}`,
-            "---",
-          ) ?? "Something went wrong";
-        errorMessage = errorMessage.replace("---, ", "");
+        const data = error.response?.data;
+        // ProblemDetails `errors` is `{ field: string[] }`; older endpoints send `[{ message }]`.
+        const messages: string[] = Array.isArray(data?.errors)
+          ? data.errors.map((item: { message?: string }) => item.message ?? "")
+          : Object.values<string[]>(data?.errors ?? {}).flat();
+        const errorMessage = messages.filter(Boolean).join(", ") || data?.detail || "Something went wrong";
         enqueueSnackbar({
           message: errorMessage,
           variant: "error",

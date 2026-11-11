@@ -20,7 +20,7 @@ export interface CmsItem {
   status: CmsStatus;
   order: number;
   createdAt: string;
-  updatedAt: string;
+  updatedAt: string | null;
   createdBy: string;
   updatedBy: string;
   [field: string]: CmsFieldValue;
@@ -37,13 +37,15 @@ export interface CmsListParams {
   filters?: Record<string, string>;
 }
 
-export interface CmsListResult {
-  items: CmsItem[];
+export interface CmsPage<T> {
+  items: T[];
   page: number;
   pageSize: number;
   totalItems: number;
   totalPages: number;
 }
+
+export type CmsListResult = CmsPage<CmsItem>;
 
 export interface CmsCollectionSummary {
   slug: string;

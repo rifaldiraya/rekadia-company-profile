@@ -17,6 +17,8 @@ declare module "next-auth" {
     ]
     accessToken: string;
     refreshToken: string;
+    /** Epoch milliseconds when `accessToken` expires. */
+    accessTokenExpires: number;
   }
   interface Session {
     accessToken: string;
@@ -55,6 +57,7 @@ declare module "next-auth/jwt" {
     picture: string;
     accessToken: string;
     refreshToken: string;
+    accessTokenExpires: number;
   }
 }
 

@@ -5,7 +5,7 @@ export type ContactSource =
   | "website-product-e-office-email"
   | "website-product-delva";
 
-/** Proposed payload for `POST /api/contact` (to be confirmed with the backend team). */
+/** Payload for `POST /contact` (backend Swagger: `SubmitContactRequest`). */
 export interface ContactRequest {
   fullName: string;
   companyName: string;

@@ -95,7 +95,7 @@ export const CMS_RESOURCES: CmsResource[] = [
     titleField: "title",
     defaultSort: "order",
     replaces: ["Case Studies"],
-    filters: ["category"],
+    filters: [],
     fields: [
       { name: "title", label: "Title", type: "text", required: true, maxLength: 256 },
       slugField("title"),
